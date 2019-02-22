@@ -18,19 +18,17 @@ from rest_framework import status
 # user Django paginator to divide many data into pages
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .models import User
-#from .serializers import UserSerializer
+from .serializers import UserSerializer
 
 # ----- from file serializer
-from rest_framework import serializers
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ('id','phone','name', 'car_info', 'email')
-
+#from rest_framework import serializers
+#class UserSerializer(serializers.ModelSerializer):
+#    class Meta:
+#        model = User
+#        fields = ('id','phone','name', 'car_info', 'email')
 
 # default index page
-@api_view(['GET'])
-def index_prompt(request):
+def index(request):
     return HttpResponse("Hello, world. You're at the polls index.")
 
 # Create your views here.
@@ -56,7 +54,7 @@ def users_list(request):
         except EmptyPage:
             data = paginator.page(paginator.num_pages)
 
-        serializer = UserSerializer()(data,context={'request': request} ,many=True)
+        serializer = UserSerializer(data,context={'request': request} ,many=True)
         if data.has_next():
             nextPage = data.next_page_number()
         if data.has_previous():
@@ -87,11 +85,11 @@ def users_detail(request, id):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
-        serializer = UserSerializer()(user,context={'request': request})
+        serializer = UserSerializer(user,context={'request': request})
         return Response(serializer.data)
 
     elif request.method == 'PUT':
-        serializer = UserSerializer()(user, data=request.data,context={'request': request})
+        serializer = UserSerializer(user, data=request.data,context={'request': request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)

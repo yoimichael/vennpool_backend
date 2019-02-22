@@ -17,11 +17,11 @@ from django.conf.urls import url, include
 from django.contrib import admin
 
 # -------front-back test/
-#from gepu.views import users_list, users_detail
+from gepu.views import users_list, users_detail, index
 
-
-# url('', views.index, name = 'index'),
 urlpatterns = [
-    url(r'^',include('gepu.urls')),
     url(r'^admin/', admin.site.urls),
+    url(r'^$', index,name='index'),
+    url(r'^gepu/$', users_list),
+    url(r'^gepu/(?P<id>[0-9]+)$', users_detail),
 ]
