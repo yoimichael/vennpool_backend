@@ -6,8 +6,8 @@ import django.utils.timezone
 import uuid
 
 def create_user(apps,schema_editor):
-    User = apps.get_model('gepu_user','User')
-    User(1,"Mi").save()
+    User = apps.get_model('gepu','User')
+    User(uid = 1,name = "Mi", phone = "00000000").save()
 
 class Migration(migrations.Migration):
 
