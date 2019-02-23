@@ -59,4 +59,3 @@ class Group(models.Model):
     events = models.ManyToManyField('Event', null=True,default=-1,blank=True)
     def __str__(self):
         return self.name
-
