@@ -60,7 +60,7 @@ def users_list(request):
         if data.has_previous():
             previousPage = data.previous_page_number()
 
-        return Response({'data': serializer.data , 'count': paginator.count, 'numpages' : paginator.num_pages, 'nextlink': '/api/gepu/?page=' + str(nextPage), 'prevlink': '/api/gepu/?page=' + str(previousPage)})
+        return Response({'data': serializer.data , 'count': paginator.count, 'numpages' : paginator.num_pages, 'nextlink': '/gepu/?page=' + str(nextPage), 'prevlink': '/gepu/?page=' + str(previousPage)})
 
 
     # POST request
