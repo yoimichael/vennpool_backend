@@ -16,12 +16,18 @@ Including another URLconf
 from django.conf.urls import url, include
 from django.contrib import admin
 
-# -------front-back test/
-from gepu.views import users_list, users_detail, index
+# API call imports
+from gepu.user_views import users_list, users_detail
+
+# default index page
+from django.http import HttpResponse
+def index(request):
+    return HttpResponse("Hello, Vennpool.")
+
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^$', index,name='index'),
-    url(r'^gepu/$', users_list),
-    url(r'^gepu/(?P<id>[0-9]+)$', users_detail),
+    url(r'^api/user/$', users_list),
+    url(r'^api/user/(?P<id>[0-9]+)$', users_detail),
 ]

@@ -1,16 +1,13 @@
 # -*- coding: utf-8 -*-
 
 '''
-Front end of front-back test 
+Front end of front-back test
 '''
 
 from __future__ import unicode_literals
 from django.shortcuts import render
 
-# for index
-from django.http import HttpResponse
-
-# ---test RESTful
+# REST
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import status
@@ -19,19 +16,6 @@ from rest_framework import status
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .models import User
 from .serializers import UserSerializer
-
-# ----- from file serializer
-#from rest_framework import serializers
-#class UserSerializer(serializers.ModelSerializer):
-#    class Meta:
-#        model = User
-#        fields = ('id','phone','name', 'car_info', 'email')
-
-# default index page
-def index(request):
-    return HttpResponse("Hello, world. You're at the polls index.")
-
-# Create your views here.
 
 # Get the type of request
 @api_view(['GET', 'POST'])
@@ -60,8 +44,7 @@ def users_list(request):
         if data.has_previous():
             previousPage = data.previous_page_number()
 
-        return Response({'data': serializer.data , 'count': paginator.count, 'numpages' : paginator.num_pages, 'nextlink': '/gepu/?page=' + str(nextPage), 'prevlink': '/gepu/?page=' + str(previousPage)})
-
+        return Response({'data': serializer.data , 'count': paginator.count, 'numpages' : paginator.num_pages, 'nextlink': '/api/user/?page=' + str(nextPage), 'prevlink': '/api/user/?page=' + str(previousPage)})
 
     # POST request
     elif request.method == 'POST':
@@ -98,5 +81,4 @@ def users_detail(request, id):
     elif request.method == 'DELETE':
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-
+        # POST request

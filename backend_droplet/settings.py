@@ -29,11 +29,16 @@ ALLOWED_HOSTS = ['178.128.177.5']
 
 
 # Application definition
+'''
+corsheaders: support CORS that accepts IP addresses defined CORS_ORIGIN_WHITELIST
+rest_framework: support REST
+gepu.apps.GepuConfig: database
+'''
 
 INSTALLED_APPS = [
     'gepu.apps.GepuConfig',
     'rest_framework',
-         'corsheaders',
+    'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -41,10 +46,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 ]
-
+'''
+corsheaders.middleware.CorsMiddleware: CORS
+'''
 MIDDLEWARE = [
-            'corsheaders.middleware.CorsMiddleware',
-
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -135,6 +141,7 @@ USE_I18N = True
 
 USE_L10N = True
 
+# using time zone
 USE_TZ = True
 
 

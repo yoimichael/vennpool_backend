@@ -6,6 +6,3 @@ class UserSerializer(ModelSerializer):
     class Meta:
         model = User
         fields = ('id','phone','name', 'car_info', 'email')
-
-
-
