@@ -44,10 +44,10 @@ class Event(models.Model):
     createrID = models.CharField(max_length=36,default='')
     posts = models.ManyToManyField('Post',default=-1,blank=True)
     # counter for claimed rides
-    count = models.IntegerField(default=0)
+    #count = models.IntegerField(default=0)
     time = models.DateTimeField(default=timezone.now)
     # cascade: if the group it belongs is deleted, it gets deleted.
-    groupID = models.OneToOneField('Group',default=-1,on_delete=models.CASCADE)
+    groupID = models.ForeignKey('Group',on_delete=models.CASCADE)
     def __str__(self):
         return self.title
 
