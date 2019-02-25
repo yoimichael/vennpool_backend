@@ -17,7 +17,7 @@ class GroupSerializer(ModelSerializer):
     class Meta:
         model = Group
         fields = ('id','gid','name','admin', 'users', 'events')
-        
+
 class EventSerializer(ModelSerializer):
     class Meta:
         model = Event
