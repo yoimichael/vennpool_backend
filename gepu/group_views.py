@@ -19,7 +19,7 @@ from .serializers import GroupSerializer
 
 # Get the type of request
 @api_view(['GET', 'POST'])
-def group_list(request,group_ids):
+def group_list(request, group_ids):
     """
     Takes a list of group-id's and return all the group objects that match
     List of user's groups, or create a new group (with user in it).
@@ -29,9 +29,9 @@ def group_list(request,group_ids):
         data = []
         nextPage = 1
         previousPage = 1
-        groups = Group.objects.filter(id__in=group_ids)
+        groups = Group.objects.filter(id__in=group_ids.split(','))
         page = request.GET.get('page', 1)
-        paginator = Paginator(users, 10)
+        paginator = Paginator(groups, 10)
         try:
             data = paginator.page(page)
         except PageNotAnInteger:
