@@ -31,7 +31,7 @@ def group_list(request, group_ids):
         previousPage = 1
         groups = Group.objects.filter(id__in=group_ids.split(','))
         page = request.GET.get('page', 1)
-        paginator = Paginator(users, 10)
+        paginator = Paginator(groups, 10)
         try:
             data = paginator.page(page)
         except PageNotAnInteger:

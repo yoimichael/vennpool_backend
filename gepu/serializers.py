@@ -22,3 +22,4 @@ class EventSerializer(ModelSerializer):
     class Meta:
         model = Event
         fields = ('id','title','to_addr','photo', 'info','posts','time','group')
+
