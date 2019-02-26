@@ -19,8 +19,8 @@ class User(models.Model):
 class Post(models.Model):
     #uid = models.UUIDField(default=uuid4, editable=False)
     # cascade: if the event is deleted, this post will be deleted
-    event = models.ForeignKey('Event',on_delete=models.CASCADE, related_name='posts')
-    # stores the id who craeted it
+    # stores the foreign key of whom created this post
+    creator = models.ForeignKey('User',on_delete=models.CASCADE,related_name="your_posts")
     creatorID = models.DecimalField(max_digits=10, decimal_places=0)
     # indicator whether it's a ride request (True) or drive offer (False)
     isRide = models.BooleanField(default=False)
@@ -28,6 +28,7 @@ class Post(models.Model):
     from_addr = models.TextField(blank=True)
     seats = models.PositiveIntegerField(default=0)
     time = models.DateTimeField(default=timezone.now)
+    event = models.ForeignKey('Event',on_delete=models.CASCADE, related_name='posts')
     users = models.ManyToManyField('User',default=-1, related_name='posts')
     def __str__(self):
         return str(self.time)
@@ -50,9 +51,11 @@ class Event(models.Model):
 class Group(models.Model):
     gid = models.UUIDField(default=uuid4, editable=False)
     name = models.CharField(max_length=36,default='')
-    admin = models.CharField(max_length=36,default='') # stores admin's uid
+    # adding a + to cancel the backwards relation
+    admins = models.ManyToManyField('User', null=True,default=-1,related_name='group_admins+')
+
+    #admin = models.CharField(max_length=36,default='') # stores admin's uid
     users = models.ManyToManyField('User', null=True,default=-1,related_name='groups')
     #events = models.ManyToManyField('Event', null=True,default=-1,blank=True)
     def __str__(self):
         return self.name
-

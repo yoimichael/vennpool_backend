@@ -19,6 +19,8 @@ from django.contrib import admin
 # API call imports
 from gepu.user_views import users_list, users_detail
 from gepu.group_views import group_list, group_detail
+from gepu.post_views import post_list, post_detail
+from gepu.event_views import event_list, event_detail
 
 # default index page
 from django.http import HttpResponse
@@ -33,4 +35,8 @@ urlpatterns = [
     url(r'^api/user/(?P<id>[0-9]+)$', users_detail),
     url(r'^api/group/(?P<group_ids>[0-9,]*)$', group_list),
     url(r'^api/group/(?P<id>[0-9]+)$', group_detail),
+    url(r'^api/post/(?P<post_ids>[0-9,]*)$', post_list),
+    url(r'^api/post/(?P<id>[0-9]+)$', post_detail),
+    url(r'^api/event/(?P<event_ids>[0-9,]*)$', event_list),
+    url(r'^api/event/(?P<id>[0-9]+)$', event_detail),
 ]

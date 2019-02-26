@@ -10,16 +10,16 @@ class PostSerializer(ModelSerializer):
     users = UserSerializer(read_only=True, many=True)
     class Meta:
         model = Post
-        fields = ('id','event','creatorID','isRide', 'third_Party', 'from_addr','seats','time','users')
+        fields = ('id','creator','isRide', 'third_Party', 'from_addr','seats','time','event','users')
+
+class EventSerializer(ModelSerializer):
+    class Meta:
+        model = Event
+        fields = ('id','title','to_addr','photo', 'info','time','group')
+
 
 class GroupSerializer(ModelSerializer):
     users = UserSerializer(read_only=True, many=True)
     class Meta:
         model = Group
-        fields = ('id','gid','name','admin', 'users', 'events')
-
-class EventSerializer(ModelSerializer):
-    class Meta:
-        model = Event
-        fields = ('id','title','to_addr','photo', 'info','posts','time','group')
-
+        fields = ('id','gid','name','admins', 'users', 'events')
