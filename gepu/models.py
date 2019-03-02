@@ -3,59 +3,63 @@ from uuid import uuid4
 from django.utils import timezone
 
 class User(models.Model):
-    # let postgres make its own primary key
-    uid = models.UUIDField(default=uuid4, editable=False)
-    phone = models.CharField(max_length=15,blank=False)
-    name = models.CharField(max_length=20,blank=False)
+    '''
+    backward relations: posts, your_posts
+    '''
+    # default id: Serial for user
     car_info = models.CharField(max_length=25,blank=True)
+    phone = models.CharField(max_length=15,blank=False)
+    events = models.ManyToManyField('Event',default=-1, related_name='members')
+
+    # fb API may provide
+    fb_id = models.BigIntegerField(null=True, blank=True)
+    messenger_id = models.BigIntegerField(null=True, blank=True)
+    name = models.CharField(max_length=20,blank=False)
     email = models.CharField(max_length=25,blank=True)
     photo = models.TextField(blank=True)
-    #groups = models.ManyToManyField('Group', blank=True, null=True, related_name='users')
-    # posts = models.ManyToManyField('Post', blank=True)
+
+    # nice to have
     join_date = models.DateTimeField(default=timezone.now,editable=False)
+
     def __str__(self):
         return self.name
 
 class Post(models.Model):
-    #uid = models.UUIDField(default=uuid4, editable=False)
-    # cascade: if the event is deleted, this post will be deleted
-    # stores the foreign key of whom created this post
-    creator = models.ForeignKey('User',on_delete=models.CASCADE,related_name="your_posts")
-    creatorID = models.DecimalField(max_digits=10, decimal_places=0)
-    # indicator whether it's a ride request (True) or drive offer (False)
+    # default id: Serial for post
     isRide = models.BooleanField(default=False)
     third_Party = models.BooleanField(default=False)
     from_addr = models.TextField(blank=True)
-    seats = models.PositiveIntegerField(default=0)
-    time = models.DateTimeField(default=timezone.now)
+    to_addr = models.TextField(blank=True)
+    seats = models.PositiveSmallIntegerField(default=0)
     event = models.ForeignKey('Event',on_delete=models.CASCADE, related_name='posts')
+    creator = models.ForeignKey('User',on_delete=models.CASCADE,related_name="your_posts")
+    time = models.DateTimeField(default=timezone.now)
     users = models.ManyToManyField('User',default=-1, related_name='posts')
+
     def __str__(self):
-        return str(self.time)
+        return str(self.time + self.from_addr + self.to_addr)
 
 class Event(models.Model):
-    #uid = models.UUIDField(default=uuid4, editable=False)
+    '''
+    backward relations: posts, members, hash
+    '''
+    # default id: Serial for event
+    fb_eid = models.BigIntegerField(null=True, blank=True)
     title = models.CharField(max_length=20,default='')
     to_addr = models.TextField(default='')
-    photo = models.TextField(default='', null=True,blank=True)
-    info = models.TextField(default='', null=True,blank=True)
-    #posts = models.ManyToManyField('Post',default=-1,blank=True)
-    # counter for claimed rides
-    #count = models.IntegerField(default=0)
     time = models.DateTimeField(default=timezone.now)
-    # cascade: if the group it belongs is deleted, it gets deleted.
-    group = models.ForeignKey('Group',on_delete=models.CASCADE, related_name='events')
+    info = models.TextField(default='', null=True,blank=True)
+    photo = models.TextField(default='', null=True,blank=True)
+
     def __str__(self):
         return self.title
 
-class Group(models.Model):
-    gid = models.UUIDField(default=uuid4, editable=False)
-    name = models.CharField(max_length=36,default='')
-    # adding a + to cancel the backwards relation
-    admins = models.ManyToManyField('User', null=True,default=-1,related_name='group_admins+')
+class Hash(models.Model):
+    hash_code = models.CharField(primary_key = True, max_length=4,default='BEEF')
+    whitelist = models.ArrayField(models.BigIntegerField(null=True, blank=True), null=True, blank=True)
+    valid = models.BooleanField(default=False)
+    valid_util = models.DateTimeField(default=timezone.nowtimezone.timedelta(days=5))
+    event = models.ForeignKey('Event',on_delete=models.CASCADE, related_name='hash')
 
-    #admin = models.CharField(max_length=36,default='') # stores admin's uid
-    users = models.ManyToManyField('User', null=True,default=-1,related_name='groups')
-    #events = models.ManyToManyField('Event', null=True,default=-1,blank=True)
     def __str__(self):
-        return self.name
+        return self.hash_code + ":" + str(self.event)

@@ -1,25 +1,25 @@
 from rest_framework.serializers import ModelSerializer
 from .models import User, Group, Post, Event
 
+# serializers used for RESTful responses
+class EventSerializer(ModelSerializer):
+    class Meta:
+        model = Event
+        fields = ('id','fb_eid', 'title','to_addr','time','info','photo','posts','members','hash')
+
+class HashSerializer(ModelSerializer):
+    class Meta:
+        model = Hash
+        fields = ('hash_code','whitelist','valid','valid_until','event')
+
 class UserSerializer(ModelSerializer):
+    events = EventSerializer(read_only=True, many=True)
     class Meta:
         model = User
-        fields = ('id','phone','name', 'car_info', 'email','photo','groups','posts')
+        fields = ('id','car_info','phone', 'events', 'fb_id','messenger_id','name', 'email','photo','join_date','posts','your_posts')
 
 class PostSerializer(ModelSerializer):
     users = UserSerializer(read_only=True, many=True)
     class Meta:
         model = Post
-        fields = ('id','creator','isRide', 'third_Party', 'from_addr','seats','time','event','users')
-
-class EventSerializer(ModelSerializer):
-    class Meta:
-        model = Event
-        fields = ('id','title','to_addr','photo', 'info','time','group')
-
-
-class GroupSerializer(ModelSerializer):
-    users = UserSerializer(read_only=True, many=True)
-    class Meta:
-        model = Group
-        fields = ('id','gid','name','admins', 'users', 'events')
+        fields = ('id','isRide', 'third_Party', 'from_addr','to_addr','seats','event','creator','time','users')
