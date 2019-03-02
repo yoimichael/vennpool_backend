@@ -21,7 +21,7 @@ class Post(models.Model):
     # cascade: if the event is deleted, this post will be deleted
     # stores the foreign key of whom created this post
     creator = models.ForeignKey('User',on_delete=models.CASCADE,related_name="your_posts")
-    creatorID = models.DecimalField(max_digits=10, decimal_places=0)
+    #creatorID = models.DecimalField(max_digits=10, decimal_places=0)
     # indicator whether it's a ride request (True) or drive offer (False)
     isRide = models.BooleanField(default=False)
     third_Party = models.BooleanField(default=False)

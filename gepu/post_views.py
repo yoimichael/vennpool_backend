@@ -19,7 +19,7 @@ from .serializers import PostSerializer
 
 # Get the type of request
 @api_view(['GET', 'POST'])
-def posts_list(request, post_ids):
+def post_list(request, post_ids):
     """
     List posts, or create a new post.
     """
@@ -28,7 +28,7 @@ def posts_list(request, post_ids):
         data = []
         nextPage = 1
         previousPage = 1
-        posts = Post.objects.filter(id__in=group_ids.split(','))
+        posts = Post.objects.filter(id__in=post_ids.split(','))
         page = request.GET.get('page', 1)
         paginator = Paginator(posts, 10)
         try:
@@ -57,7 +57,7 @@ def posts_list(request, post_ids):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET', 'PUT', 'DELETE'])
-def posts_detail(request, id):
+def post_detail(request, id):
     """
     Retrieve, update or delete a post by id/pk.
     """

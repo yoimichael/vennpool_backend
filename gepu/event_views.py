@@ -19,7 +19,7 @@ from .serializers import EventSerializer
 
 # Get the type of request
 @api_view(['GET', 'POST'])
-def events_list(request, event_ids):
+def event_list(request, event_ids):
     """
     List events, or create a new event.
     """
@@ -28,7 +28,7 @@ def events_list(request, event_ids):
         data = []
         nextPage = 1
         previousPage = 1
-        events = Event.objects.filter(id__in=group_ids.split(','))
+        events = Event.objects.filter(id__in=event_ids.split(','))
         page = request.GET.get('page', 1)
         paginator = Paginator(events, 10)
         try:
@@ -57,7 +57,7 @@ def events_list(request, event_ids):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET', 'PUT', 'DELETE'])
-def events_detail(request, id):
+def event_detail(request, id):
     """
     Retrieve, update or delete a event by id/pk.
     """
