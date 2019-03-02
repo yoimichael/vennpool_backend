@@ -1,15 +1,15 @@
 from django.db import models
 from uuid import uuid4
 from django.utils import timezone
+from django.contrib.postgres.fields import ArrayField
 
 class User(models.Model):
     '''
-    backward relations: posts, your_posts
+    backward relations: posts, your_posts,events
     '''
     # default id: Serial for user
     car_info = models.CharField(max_length=25,blank=True)
-    phone = models.CharField(max_length=15,blank=False)
-    events = models.ManyToManyField('Event',default=-1, related_name='members')
+    phone = models.CharField(max_length=15,blank=True)
 
     # fb API may provide
     fb_id = models.BigIntegerField(null=True, blank=True)
@@ -41,10 +41,12 @@ class Post(models.Model):
 
 class Event(models.Model):
     '''
-    backward relations: posts, members, hash
+    backward relations: posts, hash
     '''
     # default id: Serial for event
     fb_eid = models.BigIntegerField(null=True, blank=True)
+    members = models.ManyToManyField('User',default=-1, related_name='events')
+    # fb API may provide
     title = models.CharField(max_length=20,default='')
     to_addr = models.TextField(default='')
     time = models.DateTimeField(default=timezone.now)
@@ -54,11 +56,14 @@ class Event(models.Model):
     def __str__(self):
         return self.title
 
+def five_days_valid():
+    return timezone.now() + timezone.timedelta(days=5)
+
 class Hash(models.Model):
     hash_code = models.CharField(primary_key = True, max_length=4,default='BEEF')
-    whitelist = models.ArrayField(models.BigIntegerField(null=True, blank=True), null=True, blank=True)
+    whitelist = ArrayField(models.BigIntegerField(null=True, blank=True), null=True, blank=True)
     valid = models.BooleanField(default=False)
-    valid_util = models.DateTimeField(default=timezone.nowtimezone.timedelta(days=5))
+    valid_util = models.DateTimeField(default=five_days_valid)
     event = models.ForeignKey('Event',on_delete=models.CASCADE, related_name='hash')
 
     def __str__(self):

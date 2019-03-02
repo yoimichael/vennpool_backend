@@ -33,8 +33,6 @@ urlpatterns = [
     url(r'^$', index,name='index'),
     url(r'^api/user/$', users_list),
     url(r'^api/user/(?P<id>[0-9]+)$', users_detail),
-    url(r'^api/group/(?P<group_ids>[0-9,]*)$', group_list),
-    url(r'^api/group/(?P<id>[0-9]+)$', group_detail),
     url(r'^api/post/(?P<post_ids>[0-9,]*)$', post_list),
     url(r'^api/post/(?P<id>[0-9]+)$', post_detail),
     url(r'^api/event/(?P<event_ids>[0-9,]*)$', event_list),
