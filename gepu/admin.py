@@ -9,6 +9,6 @@ from .models import *
 admin.site.register(Event)
 admin.site.register(Post)
 admin.site.register(User)
-admin.site.register(Group)
+admin.site.register(Hash)
 
 

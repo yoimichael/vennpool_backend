@@ -1,5 +1,5 @@
 from rest_framework.serializers import ModelSerializer
-from .models import User, Group, Post, Event
+from .models import User, Hash, Post, Event
 
 # serializers used for RESTful responses
 class EventSerializer(ModelSerializer):
