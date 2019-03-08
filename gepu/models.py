@@ -69,7 +69,7 @@ class Hash(models.Model):
     whitelist = ArrayField(models.BigIntegerField(null=True, blank=True), null=True, blank=True)
     #valid = models.BooleanField(default=False,blank=False)
     valid_util = models.DateTimeField(default=five_days_valid)
-    event = models.ForeignKey('Event',on_delete=models.SET_NULL, related_name='hash',null=True, default = None)
+    event = models.ForeignKey('Event',on_delete=models.SET_NULL, related_name='hash',null=True, default=None, blank=True)
 
     def __str__(self):
         return self.hash_code

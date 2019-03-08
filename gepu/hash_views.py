@@ -15,7 +15,27 @@ from rest_framework import status
 # event Django paginator to divide many data into pages
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .models import Event
-from .serializers import EventSerializer
+from .serializers import EventSerializer,HashSerializer
+
+# Get the type of request
+@api_view(['GET'])
+def get_hash(request, event_id):
+
+    # obj= Model.objects.filter(testfield=12).latest()
+
+
+    try:
+        hash = Event.objects.get(id=event_id)
+    except Event.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    if (event.hash_valid == 1):
+
+
+
+    serializer = EventSerializer(,context={'request': request})
+    return Response(serializer.data)
+
 
 # Get the type of request
 @api_view(['GET', 'POST'])
