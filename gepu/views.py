@@ -289,9 +289,7 @@ def get_hash(request, event_id):
             else:
                 new.hash.whitelist = request.data.whitelist
         else:
-            # when all hashes are not available
-
-            # create a new hash that is not numbers
+            # when all hashes are not available create a new hash that is not pure numbers
             print("Creating non-number cache.")
             new_hash = "".join([char(randint(3,126)) for i in range(4)])
             if (Hash.objects.filter(hash_code=new_hash).exists()):
@@ -304,7 +302,7 @@ def get_hash(request, event_id):
                 else:
                     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 @api_view(['GET'])
-def get_event(request, hash_code,auth_id):
+def get_event(request, hash_code):
     '''
     given an event id return a hash of it (generate one if necessary)
     '''

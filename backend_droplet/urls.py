@@ -33,6 +33,6 @@ urlpatterns = [
     url(r'^api/post/(?P<id>[0-9]+)$', post_detail),
     url(r'^api/event/(?P<event_ids>[0-9,]*)$', event_list),
     url(r'^api/event/(?P<id>[0-9]+)$', event_detail),
-    url(r'^api/hash/code/(?P<hash_code>[0-9,]*)$', get_hash),
-    url(r'^api/hash/event/(?P<event_id>.{4})$', event_detail),
+    url(r'^api/hash/code/(?P<hash_code>[.]{4})$', get_event),
+    url(r'^api/hash/event/(?P<event_id>[0-9,]+)$', get_hash),
 ]
