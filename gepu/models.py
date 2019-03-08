@@ -5,7 +5,7 @@ from django.contrib.postgres.fields import ArrayField
 
 class User(models.Model):
     '''
-    backward relations: posts, your_posts,events, your_events
+    backward relations: posts, your_posts, events, your_events
     '''
     # default id: Serial for user
     car_info = models.CharField(max_length=25,blank=True)
@@ -58,15 +58,18 @@ class Event(models.Model):
         return self.title
 
 def five_days_valid():
+    '''
+    return five days from now()
+    '''
     return timezone.now() + timezone.timedelta(days=5)
 
 class Hash(models.Model):
     hash_code = models.CharField(primary_key = True, max_length=4,default='BEEF')
     public = models.BooleanField(default=True,blank=False)
     whitelist = ArrayField(models.BigIntegerField(null=True, blank=True), null=True, blank=True)
-    valid = models.BooleanField(default=False,blank=False)
+    #valid = models.BooleanField(default=False,blank=False)
     valid_util = models.DateTimeField(default=five_days_valid)
-    event = models.ForeignKey('Event',on_delete=models.CASCADE, related_name='hash',null=True)
+    event = models.ForeignKey('Event',on_delete=models.SET_NULL, related_name='hash',null=True, default = None)
 
     def __str__(self):
         return self.hash_code
