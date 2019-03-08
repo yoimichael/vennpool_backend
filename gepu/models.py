@@ -34,7 +34,8 @@ class Post(models.Model):
     event = models.ForeignKey('Event',on_delete=models.CASCADE, related_name='posts')
     creator = models.ForeignKey('User',on_delete=models.CASCADE,related_name="your_posts")
     time = models.DateTimeField(default=timezone.now,blank=True)
-    users = models.ManyToManyField('User',default=-1, related_name='posts', blank=True,null=True)
+    users = models.ManyToManyField('User',default=-1, related_name='posts')
+
     def __str__(self):
         return str(self.time)
 
