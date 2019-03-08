@@ -38,7 +38,7 @@ gepu.apps.GepuConfig: database
 INSTALLED_APPS = [
     'gepu.apps.GepuConfig',
     'rest_framework',
-    'corsheaders',
+#    'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -46,11 +46,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 ]
-'''
-corsheaders.middleware.CorsMiddleware: CORS
-'''
+#corsheaders.middleware.CorsMiddleware: CORS
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
+#    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
