@@ -12,25 +12,45 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import status
 
-# post Django paginator to divide many data into pages
+# event Django paginator to divide many data into pages
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from .models import Post
-from .serializers import PostSerializer
+from .models import Event
+from .serializers import EventSerializer,HashSerializer
+
+# Get the type of request
+@api_view(['GET'])
+def get_hash(request, event_id):
+
+    # obj= Model.objects.filter(testfield=12).latest()
+
+
+    try:
+        hash = Event.objects.get(id=event_id)
+    except Event.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    if (event.hash_valid == 1):
+
+
+
+    serializer = EventSerializer(,context={'request': request})
+    return Response(serializer.data)
+
 
 # Get the type of request
 @api_view(['GET', 'POST'])
-def posts_list(request, post_ids):
+def event_list(request, event_ids):
     """
-    List posts, or create a new post.
+    List events, or create a new event.
     """
     # GET request
     if request.method == 'GET':
         data = []
         nextPage = 1
         previousPage = 1
-        posts = Post.objects.filter(id__in=group_ids.split(','))
+        events = Event.objects.filter(id__in=event_ids.split(','))
         page = request.GET.get('page', 1)
-        paginator = Paginator(posts, 10)
+        paginator = Paginator(events, 10)
         try:
             data = paginator.page(page)
         except PageNotAnInteger:
@@ -38,18 +58,18 @@ def posts_list(request, post_ids):
         except EmptyPage:
             data = paginator.page(paginator.num_pages)
 
-        serializer = PostSerializer(data,context={'request': request} ,many=True)
+        serializer = EventSerializer(data,context={'request': request} ,many=True)
         if data.has_next():
             nextPage = data.next_page_number()
         if data.has_previous():
             previousPage = data.previous_page_number()
 
-        return Response({'data': serializer.data , 'count': paginator.count, 'numpages' : paginator.num_pages, 'nextlink': '/api/post/?page=' + str(nextPage), 'prevlink': '/api/post/?page=' + str(previousPage)})
+        return Response({'data': serializer.data , 'count': paginator.count, 'numpages' : paginator.num_pages, 'nextlink': '/api/event/?page=' + str(nextPage), 'prevlink': '/api/event/?page=' + str(previousPage)})
 
     # POST request
     elif request.method == 'POST':
         # fetch the data
-        serializer = PostSerializer(data=request.data)
+        serializer = EventSerializer(data=request.data)
         # save the data
         if serializer.is_valid():
             serializer.save()
@@ -57,28 +77,28 @@ def posts_list(request, post_ids):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET', 'PUT', 'DELETE'])
-def posts_detail(request, id):
+def event_detail(request, id):
     """
-    Retrieve, update or delete a post by id/pk.
+    Retrieve, update or delete a event by id/pk.
     """
-    # locate the post
+    # locate the event
     try:
-        post = Post.objects.get(id=id)
-    except Post.DoesNotExist:
+        event = Event.objects.get(id=id)
+    except Event.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
-        serializer = PostSerializer(post,context={'request': request})
+        serializer = EventSerializer(event,context={'request': request})
         return Response(serializer.data)
 
     elif request.method == 'PUT':
-        serializer = PostSerializer(post, data=request.data,context={'request': request})
+        serializer = EventSerializer(event, data=request.data,context={'request': request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     elif request.method == 'DELETE':
-        post.delete()
+        event.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
         # POST request

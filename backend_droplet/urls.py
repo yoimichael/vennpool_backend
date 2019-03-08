@@ -17,16 +17,12 @@ from django.conf.urls import url, include
 from django.contrib import admin
 
 # API call imports
-from gepu.user_views import users_list, users_detail
-from gepu.group_views import group_list, group_detail
-from gepu.post_views import post_list, post_detail
-from gepu.event_views import event_list, event_detail
+from gepu.views import users_list, users_detail, post_list, post_detail, event_list, event_detail, get_hash, get_event
 
 # default index page
 from django.http import HttpResponse
 def index(request):
     return HttpResponse("Hello, Vennpool.")
-
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
@@ -37,4 +33,6 @@ urlpatterns = [
     url(r'^api/post/(?P<id>[0-9]+)$', post_detail),
     url(r'^api/event/(?P<event_ids>[0-9,]*)$', event_list),
     url(r'^api/event/(?P<id>[0-9]+)$', event_detail),
+    url(r'^api/hash/code/(?P<hash_code>[0-9,]*)$', get_hash),
+    url(r'^api/hash/event/(?P<event_id>.{4})$', event_detail),
 ]
