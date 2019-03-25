@@ -4,8 +4,12 @@ from django.shortcuts import render
 
 # REST
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework import status
+# REST auth
+from rest_framework.permissions import AllowAny # default is IsAuthenticated
+from django.contrib.auth import authenticate
+from rest_framework.authtoken.models import Token
 
 # user Django paginator to divide many data into pages
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -17,44 +21,84 @@ from django.utils import timezone
 from random import randint
 
 # ----------------------USER----------------------
-# Get the type of request
-@api_view(['GET', 'POST'])
-def users_list(request):
-    """
-    List users, or create a new user.
-    """
-    # GET request
-    if request.method == 'GET':
-        data = []
-        nextPage = 1
-        previousPage = 1
-        users = User.objects.all()
-        page = request.GET.get('page', 1)
-        paginator = Paginator(users, 10)
-        try:
-            data = paginator.page(page)
-        except PageNotAnInteger:
-            data = paginator.page(1)
-        except EmptyPage:
-            data = paginator.page(paginator.num_pages)
+@api_view(['POST'])
+@permission_classes((AllowAny,))
+def create_user(request):
+    '''takes a user name, id and fb token, returns gepu's auth token'''
+    data = request.data
+    if data.id is None or data.fbtoken is None:
+        return Response({'error': 'Not enough info to authenticate'},status=HTTP_400_BAD_REQUEST)
 
-        serializer = UserSerializer(data,context={'request': request} ,many=True)
-        if data.has_next():
-            nextPage = data.next_page_number()
-        if data.has_previous():
-            previousPage = data.previous_page_number()
+    # TODO:: verify data
 
-        return Response({'data': serializer.data , 'count': paginator.count, 'numpages' : paginator.num_pages, 'nextlink': '/api/user/?page=' + str(nextPage), 'prevlink': '/api/user/?page=' + str(previousPage)})
+    # authentication uses id as username, token as password
+    user = authenticate(username=data.id, password=data.fbtoken)
+    # if the user records don't match
+    if not user:
+        return Response({'error': 'Invalid Credentials'},status=HTTP_404_NOT_FOUND)
+    # if the user doesn't exist
+    token, _ = Token.objects.get_or_create(user=user)
+    # response to Respond back
+    response = {'db_token' : db_token.key}
+    # get the user data if exist
+    serializer = UserSerializer(data=request.data)
+    if serializer.is_valid():
+        response.update(serializer.data)
+    # tells the front end if the user data exsit
+    response.update({'exist': serializer.is_valid()})
+    return Response(response, status=status.HTTP_201_CREATED)
 
-    # POST request
-    elif request.method == 'POST':
-        # fetch the data
-        serializer = UserSerializer(data=request.data)
-        # save the data
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+@api_view(['POST'])
+def create_user(request):
+    # store the user data to db
+    serializer = UserSerializer(data=request.data)
+    # save the data
+    if serializer.is_valid():
+        serializer.save()
+        add_response = {'db_token' : db_token}
+        add_response.update(serializer.data)
+        return Response(add_response, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# # Get the type of request
+# @api_view(['GET', 'POST'])
+# def users_list(request):
+#     """
+#     List users, or create a new user.
+#     """
+#     # GET request
+#     if request.method == 'GET':
+#         data = []
+#         nextPage = 1
+#         previousPage = 1
+#         users = User.objects.all()
+#         page = request.GET.get('page', 1)
+#         paginator = Paginator(users, 10)
+#         try:
+#             data = paginator.page(page)
+#         except PageNotAnInteger:
+#             data = paginator.page(1)
+#         except EmptyPage:
+#             data = paginator.page(paginator.num_pages)
+#
+#         serializer = UserSerializer(data,context={'request': request} ,many=True)
+#         if data.has_next():
+#             nextPage = data.next_page_number()
+#         if data.has_previous():
+#             previousPage = data.previous_page_number()
+#
+#         return Response({'data': serializer.data , 'count': paginator.count, 'numpages' : paginator.num_pages, 'nextlink': '/api/user/?page=' + str(nextPage), 'prevlink': '/api/user/?page=' + str(previousPage)})
+#
+#     # POST request
+#     elif request.method == 'POST':
+#         # fetch the data
+#         serializer = UserSerializer(data=request.data)
+#         # save the data
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data, status=status.HTTP_201_CREATED)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET', 'PUT', 'DELETE'])
 def users_detail(request, id):

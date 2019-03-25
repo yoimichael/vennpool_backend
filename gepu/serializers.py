@@ -4,7 +4,7 @@ from .models import User, Hash, Post, Event
 class UserSerializer(ModelSerializer):
     class Meta:
         model = User
-        fields = ('id','car_info','phone', 'events', 'fb_id','messenger_id','name', 'email','photo','join_date',
+        fields = ('id','car_info','phone', 'events', 'fb_id','messenger_id','fbtoken','name', 'email','photo','join_date',
         'posts','your_posts','events')
 
 class PostSerializer(ModelSerializer):

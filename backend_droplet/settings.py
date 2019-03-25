@@ -27,18 +27,16 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['178.128.177.5']
 
-
-# Application definition
-'''
-corsheaders: support CORS that accepts IP addresses defined CORS_ORIGIN_WHITELIST
-rest_framework: support REST
-gepu.apps.GepuConfig: database
-'''
-
 INSTALLED_APPS = [
+    # gepu database app
     'gepu.apps.GepuConfig',
+    # for api calls
     'rest_framework',
+    # cors whitelist headers
     'corsheaders',
+    # rest api authentication
+    'rest_framework.authtoken',
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -61,7 +59,6 @@ MIDDLEWARE = [
 ]
 
 CORS_ORIGIN_WHITELIST = (
-    'google.com',
     'localhost:3000',
     '127.0.0.1:3000'
 )
@@ -74,6 +71,13 @@ CORS_ALLOW_METHODS = (
     'POST',
     'PUT',
 )
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication', ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated', )
+}
 
 ROOT_URLCONF = 'backend_droplet.urls'
 
