@@ -17,7 +17,7 @@ from django.conf.urls import url, include
 from django.contrib import admin
 
 # API call imports
-from gepu.views import users_list, users_detail, post_list, post_detail, event_list, event_detail, get_hash, get_event
+from gepu.views import get_auth_token, create_user, users_detail, post_list, post_detail, event_list, event_detail, get_hash, get_event
 
 # default index page
 from django.http import HttpResponse
@@ -27,7 +27,8 @@ def index(request):
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^$', index,name='index'),
-    url(r'^api/user/$', users_list),
+    url(r'^api/login/$', get_auth_token),
+    url(r'^api/user/$', create_user),
     url(r'^api/user/(?P<id>[0-9]+)$', users_detail),
     url(r'^api/post/(?P<post_ids>[0-9,]*)$', post_list),
     url(r'^api/post/(?P<id>[0-9]+)$', post_detail),

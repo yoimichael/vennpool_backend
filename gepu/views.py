@@ -8,8 +8,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework import status
 # REST auth
 from rest_framework.permissions import AllowAny # default is IsAuthenticated
-from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
+from django.contrib.auth import authenticate
 
 # user Django paginator to divide many data into pages
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -23,10 +23,10 @@ from random import randint
 # ----------------------USER----------------------
 @api_view(['POST'])
 @permission_classes((AllowAny,))
-def create_user(request):
+def get_auth_token(request):
     '''takes a user name, id and fb token, returns gepu's auth token'''
     data = request.data
-    if data.id is None or data.fbtoken is None:
+    if data['id'] is None or data['fbtoken'] is None:
         return Response({'error': 'Not enough info to authenticate'},status=HTTP_400_BAD_REQUEST)
 
     # TODO:: verify data
@@ -55,9 +55,7 @@ def create_user(request):
     # save the data
     if serializer.is_valid():
         serializer.save()
-        add_response = {'db_token' : db_token}
-        add_response.update(serializer.data)
-        return Response(add_response, status=status.HTTP_201_CREATED)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -107,8 +105,15 @@ def users_detail(request, id):
     """
     # locate the user
     try:
+        # get User object that has all user data
         user = User.objects.get(id=id)
-    except User.DoesNotExist:
+        # get the token object that has user token and auth_user object
+        user_token = Token.objects.get(key=request.META['Authorization'])
+    except (User.DoesNotExist, Token.DoesNotExist):
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    # confirm user Id and token match
+    if (user_token.user.username != user.fb_id):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
