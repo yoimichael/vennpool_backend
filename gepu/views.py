@@ -8,8 +8,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework import status
 # REST auth
 from rest_framework.permissions import AllowAny # default is IsAuthenticated
-from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
+from django.contrib.auth import authenticate
 
 # user Django paginator to divide many data into pages
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -21,6 +21,45 @@ from django.utils import timezone
 from random import randint
 
 # ----------------------USER----------------------
+@api_view(['POST'])
+@permission_classes((AllowAny,))
+def get_auth_token(request):
+    '''takes a user name, id and fb token, returns gepu's auth token'''
+    data = request.data
+    if data.id is None or data.fbtoken is None:
+        return Response({'error': 'Not enough info to authenticate'},status=HTTP_400_BAD_REQUEST)
+
+    # TODO:: verify data
+
+    # authentication uses id as username, token as password
+    user = authenticate(username=data.id, password=data.fbtoken)
+    # if the user records don't match
+    if not user:
+        return Response({'error': 'Invalid Credentials'},status=HTTP_404_NOT_FOUND)
+    # if the user doesn't exist
+    token, _ = Token.objects.get_or_create(user=user)
+    # response to Respond back
+    response = {'db_token' : db_token.key}
+    # get the user data if exist
+    serializer = UserSerializer(data=request.data)
+    if serializer.is_valid():
+        response.update(serializer.data)
+    # tells the front end if the user data exsit
+    response.update({'exist': serializer.is_valid()})
+    return Response(response, status=status.HTTP_201_CREATED)
+
+@api_view(['POST'])
+def create_user(request):
+    # store the user data to db
+    serializer = UserSerializer(data=request.data)
+    # save the data
+    if serializer.is_valid():
+        serializer.save()
+        add_response = {'db_token' : db_token}
+        add_response.update(serializer.data)
+        return Response(add_response, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 # # Get the type of request
 # @api_view(['GET', 'POST'])
@@ -335,3 +374,4 @@ def get_event(request, hash_code):
     # respond with the event data
     serializer = EventSerializer(event,context={'request': request})
     return Response(serializer.data)
+
