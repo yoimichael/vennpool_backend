@@ -17,7 +17,8 @@ from django.conf.urls import url, include
 from django.contrib import admin
 
 # API call imports
-from gepu.views import users_list, users_detail, post_list, post_detail, event_list, event_detail, get_hash, get_event
+from gepu.views import users_detail, post_list, post_detail, event_list, event_detail, get_hash, get_event
+
 
 # default index page
 from django.http import HttpResponse
@@ -27,12 +28,14 @@ def index(request):
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^$', index,name='index'),
-    url(r'^api/user/$', users_list),
-    url(r'^api/user/(?P<id>[0-9]+)$', users_detail),
-    url(r'^api/post/(?P<post_ids>[0-9,]*)$', post_list),
-    url(r'^api/post/(?P<id>[0-9]+)$', post_detail),
-    url(r'^api/event/(?P<event_ids>[0-9,]*)$', event_list),
-    url(r'^api/event/(?P<id>[0-9]+)$', event_detail),
-    url(r'^api/hash/code/(?P<hash_code>[!-~]{4})$', get_event),
-    url(r'^api/hash/event/(?P<event_id>[0-9,]+)$', get_hash),
+   # url(r'^api/login/$', get_auth_token),
+   # url(r'^api/user/$', create_user),
+    #url(r'^api/user/(?P<id>[0-9]+)$', users_detail),
+    #url(r'^api/post/(?P<post_ids>[0-9,]*)$', post_list),
+    #url(r'^api/post/(?P<id>[0-9]+)$', post_detail),
+    #url(r'^api/event/(?P<event_ids>[0-9,]*)$', event_list),
+    #url(r'^api/event/(?P<id>[0-9]+)$', event_detail),
+    #url(r'^api/hash/code/(?P<hash_code>[.]{4})$', get_event),
+    #url(r'^api/hash/event/(?P<event_id>[0-9,]+)$', get_hash),
 ]
+
