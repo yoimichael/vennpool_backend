@@ -10,6 +10,8 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny # default is IsAuthenticated
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
+from django.contrib.auth.models import User as User_auth
+from requests import get
 
 # user Django paginator to divide many data into pages
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -26,26 +28,36 @@ from random import randint
 def get_auth_token(request):
     '''takes a user name, id and fb token, returns gepu's auth token'''
     data = request.data
-    if data['id'] is None or data['fbtoken'] is None:
+    id = data.get('id')
+    fbtoken = data.get('fbtoken')
+    email = data.get('email')
+    if id is None or fbtoken is None:
         return Response({'error': 'Not enough info to authenticate'},status=HTTP_400_BAD_REQUEST)
 
-    # TODO:: verify data
+    # verify data
+    response = get('https://graph.facebook.com/me?access_token='+ fbtoken)
+    check_id = response.data.get('id')
+    if check_id is None or check_id != id:
+        # reject input that don't match record
+        return Response({'error': 'Invalid Credentials'},status=HTTP_404_NOT_FOUND)
 
     # authentication uses id as username, token as password
-    user = authenticate(username=data.id, password=data.fbtoken)
-    # if the user records don't match
+    user = authenticate(username=id, password=fbtoken)
+    # if the user credentials are incorrect or user doesn't exist
     if not user:
-        return Response({'error': 'Invalid Credentials'},status=HTTP_404_NOT_FOUND)
-    # if the user doesn't exist
-    token, _ = Token.objects.get_or_create(user=user)
-    # response to Respond back
+        if User_auth.objects.filter(username=id).exists():
+            # if user exist with this id
+            return Response({'error': 'Invalid Credentials'},status=HTTP_404_NOT_FOUND)
+        else:
+            # if user doesn't exist
+            user = User_auth.objects.create_user(username=id, email=email, password=fbtoken)
+    # get token
+    db_token, _ = Token.objects.get_or_create(user=user)
+    # data to send back
     response = {'db_token' : db_token.key}
     # get the user data if exist
-    serializer = UserSerializer(data=request.data)
-    if serializer.is_valid():
-        response.update(serializer.data)
-    # tells the front end if the user data exsit
-    response.update({'exist': serializer.is_valid()})
+    response.update({'exist': Use.objects.filter(fb_id=id).exists()})
+
     return Response(response, status=status.HTTP_201_CREATED)
 
 @api_view(['POST'])
