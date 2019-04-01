@@ -31,34 +31,56 @@ def get_auth_token(request):
     id = data.get('id')
     fbtoken = data.get('fbtoken')
     email = data.get('email')
-    if id is None or fbtoken is None:
-        return Response({'error': 'Not enough info to authenticate'},status=HTTP_400_BAD_REQUEST)
-
     # verify data
-    response = get('https://graph.facebook.com/me?access_token='+ fbtoken)
-    check_id = response.data.get('id')
-    if check_id is None or check_id != id:
-        # reject input that don't match record
-        return Response({'error': 'Invalid Credentials'},status=HTTP_404_NOT_FOUND)
+    if id is None or fbtoken is None:
+        return Response({'error': 'Invalid Credentials0'},status=status.HTTP_404_NOT_FOUND)
 
-    # authentication uses id as username, token as password
-    user = authenticate(username=id, password=fbtoken)
-    # if the user credentials are incorrect or user doesn't exist
-    if not user:
-        if User_auth.objects.filter(username=id).exists():
-            # if user exist with this id
-            return Response({'error': 'Invalid Credentials'},status=HTTP_404_NOT_FOUND)
-        else:
-            # if user doesn't exist
-            user = User_auth.objects.create_user(username=id, email=email, password=fbtoken)
+    # verify input that match the record
+    response = get('https://graph.facebook.com/me?access_token='+ fbtoken).json()
+    if 'id' not in response or response['id'] != id:
+        return Response({'error': 'Invalid Credentials1'},status=status.HTTP_404_NOT_FOUND)
+
+    # authenticate using id as username, token as password
+    userQuery = User_auth.objects.filter(username=id)
+    if len(userQuery) != 0:
+        # if the password doesn't match
+        if (not userQuery[0].check_password(fbtoken)):
+            return Response({'error': 'Invalid Credentials2'},status=status.HTTP_404_NOT_FOUND)
+        user = userQuery[0]
+    else:
+        # if user doesn't exist
+        user = User_auth.objects.create_user(username=id, email=email, password=fbtoken)
     # get token
     db_token, _ = Token.objects.get_or_create(user=user)
     # data to send back
     response = {'db_token' : db_token.key}
     # get the user data if exist
-    response.update({'exist': Use.objects.filter(fb_id=id).exists()})
+    response.update({'exist': User.objects.filter(fb_id=id).exists()})
 
     return Response(response, status=status.HTTP_201_CREATED)
+
+@api_view(['POST'])
+def logout(request):
+    data = request.data
+    id = data.get('id')
+    if id == None:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    # locate the user
+    try:
+        # get User object that has all user data
+        user_auth = User_auth.objects.get(id=id)
+        # get the token object that has user token and auth_user object
+        user_token = Token.objects.get(key=request.META['Authorization'])
+    except (User.DoesNotExist, Token.DoesNotExist):
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    # confirm user Id and token match
+    if (user_token.user.username != user_auth.username):
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    # delete sessions
+    user_token.delete()
+    user_auth.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
 
 @api_view(['POST'])
 def create_user(request):
@@ -69,7 +91,6 @@ def create_user(request):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 # # Get the type of request
 # @api_view(['GET', 'POST'])

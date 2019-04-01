@@ -1,11 +1,12 @@
 from rest_framework.serializers import ModelSerializer
 from .models import User, Hash, Post, Event
 
+''' no backward relation from serializer '''
+
 class UserSerializer(ModelSerializer):
     class Meta:
         model = User
-        fields = ('id','car_info','phone', 'events', 'fb_id','messenger_id','fbtoken','name', 'email','photo','join_date',
-        'posts','your_posts','events')
+        fields = ('id','car_info','phone', 'events', 'fb_id','messenger_id','fbtoken','name', 'email','photo','join_date')
 
 class PostSerializer(ModelSerializer):
     users = UserSerializer(read_only=True, many=True)
@@ -19,8 +20,7 @@ class EventSerializer(ModelSerializer):
     members = UserSerializer(read_only=True, many=True)
     class Meta:
         model = Event
-        fields = ('id','fb_eid', 'title','to_addr','time','info','photo',
-        'posts','members','hash')
+        fields = ('id','fb_eid', 'title','to_addr','time','info','photo','members')
 
 class HashSerializer(ModelSerializer):
     class Meta:
