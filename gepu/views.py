@@ -60,7 +60,7 @@ def get_auth_token(request):
     return Response(response, status=status.HTTP_201_CREATED)
 
 @api_view(['POST'])
-def logout(request):
+def remove_auth_token(request):
     data = request.data
     id = data.get('id')
     if id == None:
