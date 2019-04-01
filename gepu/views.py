@@ -11,6 +11,7 @@ from rest_framework.permissions import AllowAny # default is IsAuthenticated
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User as User_auth
+from requests import get
 
 # user Django paginator to divide many data into pages
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -30,30 +31,56 @@ def get_auth_token(request):
     id = data.get('id')
     fbtoken = data.get('fbtoken')
     email = data.get('email')
+    # verify data
     if id is None or fbtoken is None:
-        return Response({'error': 'Not enough info to authenticate'},status=HTTP_400_BAD_REQUEST)
+        return Response({'error': 'Invalid Credentials0'},status=status.HTTP_404_NOT_FOUND)
 
-    # TODO:: verify data
+    # verify input that match the record
+    response = get('https://graph.facebook.com/me?access_token='+ fbtoken).json()
+    if 'id' not in response or response['id'] != id:
+        return Response({'error': 'Invalid Credentials1'},status=status.HTTP_404_NOT_FOUND)
 
-    # authentication uses id as username, token as password
-    user = authenticate(username=id, password=fbtoken)
-    # if the user credentials are incorrect or user doesn't exist
-    if not user:
-        if User_auth.objects.filter(username=id).exists():
-            # if user exist with this id
-            return Response({'error': 'Invalid Credentials'},status=HTTP_404_NOT_FOUND)
-        else:
-            # if user doesn't exist
-            user = User_auth.objects.create_user(id, email, fbtoken)
+    # authenticate using id as username, token as password
+    userQuery = User_auth.objects.filter(username=id)
+    if len(userQuery) != 0:
+        # if the password doesn't match
+        if (not userQuery[0].check_password(fbtoken)):
+            return Response({'error': 'Invalid Credentials2'},status=status.HTTP_404_NOT_FOUND)
+        user = userQuery[0]
+    else:
+        # if user doesn't exist
+        user = User_auth.objects.create_user(username=id, email=email, password=fbtoken)
     # get token
     db_token, _ = Token.objects.get_or_create(user=user)
-    # # get the user data if exist
-    # serializer = UserSerializer(data=request.data)
-    # if serializer.is_valid():
-    #     response.update(serializer.data)
-    # # tells the front end if the user data exsit
-    # response.update({'exist': serializer.is_valid()})
-    return Response({'db_token' : db_token.key}, status=status.HTTP_201_CREATED)
+    # data to send back
+    response = {'db_token' : db_token.key}
+    # get the user data if exist
+    response.update({'exist': User.objects.filter(fb_id=id).exists()})
+
+    return Response(response, status=status.HTTP_201_CREATED)
+
+@api_view(['POST'])
+def logout(request):
+    data = request.data
+    id = data.get('id')
+    if id == None:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    # locate the user
+    try:
+        # get User object that has all user data
+        user_auth = User_auth.objects.get(id=id)
+        # get the token object that has user token and auth_user object
+        user_token = Token.objects.get(key=request.META['Authorization'])
+    except (User.DoesNotExist, Token.DoesNotExist):
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    # confirm user Id and token match
+    if (user_token.user.username != user_auth.username):
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    # delete sessions
+    user_token.delete()
+    user_auth.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
 
 @api_view(['POST'])
 def create_user(request):
