@@ -49,7 +49,7 @@ def get_auth_token(request):
         # # if the password doesn't match
         # if (not userQuery[0].check_password(fbtoken)):
         #     return Response({'error': 'Invalid Credentials2'},status=status.HTTP_404_NOT_FOUND)
-        # this token will be this users even if they don't match 
+        # this token will be this users even if they don't match
         user = userQuery[0]
     else:
         # if user doesn't exist
@@ -58,8 +58,11 @@ def get_auth_token(request):
     db_token, _ = Token.objects.get_or_create(user=user)
     # data to send back
     response = {'db_token' : db_token.key}
+    gepu_user_query = User.objects.filter(fb_id=id)
     # get the user data if exist
-    response.update({'exist': User.objects.filter(fb_id=id).exists(), 'user':user})
+    response.update({'exist': gepu_user_query.exists())
+    if response['exist']:
+        response.update({'user':UserSerializer(gepu_user_query[0]).data})
 
     return Response(response, status=status.HTTP_201_CREATED)
 
