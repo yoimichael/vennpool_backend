@@ -15,7 +15,7 @@ class User(models.Model):
     fb_id = models.BigIntegerField(null=True, blank=True)
     fbtoken = models.TextField(blank=True)
     messenger_id = models.BigIntegerField(null=True, blank=True)
-    name = models.CharField(max_length=20,blank=False)
+    name = models.CharField(max_length=35,blank=False)
     email = models.CharField(max_length=25,blank=True)
     photo = models.TextField(blank=True)
 
