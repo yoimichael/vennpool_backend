@@ -43,26 +43,41 @@ def get_auth_token(request):
     if 'id' not in response or response['id'] != id:
         return Response({'error': 'Invalid Credentials1'},status=status.HTTP_404_NOT_FOUND)
 
-    # authenticate using id as username, token as password
+    # find user in auth db
     userQuery = User_auth.objects.filter(username=id)
-    if len(userQuery) != 0:
-        # # if the password doesn't match
-        # if (not userQuery[0].check_password(fbtoken)):
-        #     return Response({'error': 'Invalid Credentials2'},status=status.HTTP_404_NOT_FOUND)
-        # this token will be this users even if they don't match
-        user = userQuery[0]
+    if userQuery.exists():
+        auth_user = userQuery[0]
+        # if the password doesn't match
+        if (not auth_user.check_password(fbtoken)):
+            # update the token
+            auth_user.set_password(fbtoken)
+            auth_user.save()
+            # do not return
+            # return Response({'error': 'Invalid Credentials2'},status=status.HTTP_404_NOT_FOUND)
     else:
-        # if user doesn't exist
-        user = User_auth.objects.create_user(username=id, email=email, password=fbtoken)
-    # get token
-    db_token, _ = Token.objects.get_or_create(user=user)
+        # if user doesn't exist in auth db
+        auth_user = User_auth.objects.create_user(username=id, email=email, password=fbtoken)
+
+    # find user in gepu db
+    gepu_user_query = User.objects.filter(fb_id=id)
+    if gepu_user_query.exists():
+        gepu_user = gepu_user_query[0]
+        # update the fbtoken if updated
+        if gepu_user.fbtoken != fbtoken:
+            gepu_user.fbtoken = fbtoken
+            gepu_user.save()
+
+        # add more info to the response
+        response.update({'exist': True})
+        response.update({'user':UserSerializer(gepu_user_query[0]).data})
+    else:
+        response.update({'exist': False})
+        response.update({'user': None)
+
+    # get auth token
+    db_token, _ = Token.objects.get_or_create(user=auth_user)
     # data to send back
     response = {'db_token' : db_token.key}
-    gepu_user_query = User.objects.filter(fb_id=id)
-    # get the user data if exist
-    response.update({'exist': gepu_user_query.exists())
-    if response['exist']:
-        response.update({'user':UserSerializer(gepu_user_query[0]).data})
 
     return Response(response, status=status.HTTP_201_CREATED)
 
