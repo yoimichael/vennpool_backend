@@ -38,7 +38,7 @@ def get_auth_token(request):
     if id is None or fbtoken is None:
         return Response({'error': 'Invalid Credentials0'},status=status.HTTP_404_NOT_FOUND)
 
-    # verify input that match the record
+    # verify fbtoken
     response = get('https://graph.facebook.com/me?access_token='+ fbtoken).json()
     if 'id' not in response or response['id'] != id:
         return Response({'error': 'Invalid Credentials1'},status=status.HTTP_404_NOT_FOUND)
@@ -46,9 +46,10 @@ def get_auth_token(request):
     # authenticate using id as username, token as password
     userQuery = User_auth.objects.filter(username=id)
     if len(userQuery) != 0:
-        # if the password doesn't match
-        if (not userQuery[0].check_password(fbtoken)):
-            return Response({'error': 'Invalid Credentials2'},status=status.HTTP_404_NOT_FOUND)
+        # # if the password doesn't match
+        # if (not userQuery[0].check_password(fbtoken)):
+        #     return Response({'error': 'Invalid Credentials2'},status=status.HTTP_404_NOT_FOUND)
+        # this token will be this users even if they don't match 
         user = userQuery[0]
     else:
         # if user doesn't exist
