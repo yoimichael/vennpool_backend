@@ -68,7 +68,7 @@ def remove_auth_token(request):
     # locate the user
     try:
         # get User object that has all user data
-        user_auth = User_auth.objects.get(id=id)
+        user_auth = User_auth.objects.get(username=id)
         # get the token object that has user token and auth_user object
         #user_token = Token.objects.get(key=request.META['Authorization'][6:])
         user_token = Token.objects.get(key=data.get('db_token'))
