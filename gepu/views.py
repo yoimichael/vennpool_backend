@@ -46,10 +46,14 @@ def get_auth_token(request):
     # authenticate using id as username, token as password
     userQuery = User_auth.objects.filter(username=id)
     if len(userQuery) != 0:
-        # # if the password doesn't match
-        # if (not userQuery[0].check_password(fbtoken)):
-        #     return Response({'error': 'Invalid Credentials2'},status=status.HTTP_404_NOT_FOUND)
-        # this token will be this users even if they don't match 
+        # if the password doesn't match
+        if (not userQuery[0].check_password(fbtoken)):
+            # update the token
+            userQuery[0].set_password(fbtoken)
+            userQuery[0].save()
+            # do not return
+            # return Response({'error': 'Invalid Credentials2'},status=status.HTTP_404_NOT_FOUND)
+        # this token will be this users even if they don't match
         user = userQuery[0]
     else:
         # if user doesn't exist
@@ -58,8 +62,11 @@ def get_auth_token(request):
     db_token, _ = Token.objects.get_or_create(user=user)
     # data to send back
     response = {'db_token' : db_token.key}
+    gepu_user_query = User.objects.filter(fb_id=id)
     # get the user data if exist
-    response.update({'exist': User.objects.filter(fb_id=id).exists(), 'user':UserSerializer(user).data})
+    response.update({'exist': gepu_user_query.exists()})
+    if response['exist']:
+        response.update({'user':UserSerializer(gepu_user_query[0]).data})
 
     return Response(response, status=status.HTTP_201_CREATED)
 
@@ -78,7 +85,6 @@ def remove_auth_token(request):
         # get User object that has all user data
         user_auth = User_auth.objects.get(username=id)
         # get the token object that has user token and auth_user object
-        #user_token = Token.objects.get(key=request.META['Authorization'][6:])
         user_token = Token.objects.get(key=data.get('db_token'))
     except (User.DoesNotExist, Token.DoesNotExist):
         return Response(status=status.HTTP_404_NOT_FOUND)
