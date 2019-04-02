@@ -26,7 +26,10 @@ from random import randint
 @api_view(['POST'])
 @permission_classes((AllowAny,))
 def get_auth_token(request):
-    '''takes a user name, id and fb token, returns gepu's auth token'''
+    '''
+    as user log in
+    takes a username, id and fb token, returns gepu's auth token
+    '''
     data = request.data
     id = data.get('id')
     fbtoken = data.get('fbtoken')
@@ -55,12 +58,16 @@ def get_auth_token(request):
     # data to send back
     response = {'db_token' : db_token.key}
     # get the user data if exist
-    response.update({'exist': User.objects.filter(fb_id=id).exists()})
+    response.update({'exist': User.objects.filter(fb_id=id).exists(), 'user':user})
 
     return Response(response, status=status.HTTP_201_CREATED)
 
 @api_view(['POST'])
 def remove_auth_token(request):
+    '''
+    as user log out
+    delete the session data of the user
+    '''
     data = request.data
     id = data.get('id')
     if id == None:
@@ -68,7 +75,7 @@ def remove_auth_token(request):
     # locate the user
     try:
         # get User object that has all user data
-        user_auth = User_auth.objects.get(id=id)
+        user_auth = User_auth.objects.get(username=id)
         # get the token object that has user token and auth_user object
         user_token = Token.objects.get(key=data.get('db_token'))
     except (User.DoesNotExist, Token.DoesNotExist):
