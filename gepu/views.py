@@ -59,7 +59,7 @@ def get_auth_token(request):
     # data to send back
     response = {'db_token' : db_token.key}
     # get the user data if exist
-    response.update({'exist': User.objects.filter(fb_id=id).exists(), 'user':user})
+    response.update({'exist': User.objects.filter(fb_id=id).exists(), 'user':UserSerializer(user).data})
 
     return Response(response, status=status.HTTP_201_CREATED)
 
