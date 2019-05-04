@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework import status
 # REST auth
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import AllowAny # default is IsAuthenticated
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
@@ -24,6 +25,7 @@ from random import randint
 
 # ----------------------USER----------------------
 @api_view(['POST'])
+@authentication_classes((TokenAuthentication,))
 @permission_classes((AllowAny,))
 def get_auth_token(request):
     '''
@@ -31,7 +33,7 @@ def get_auth_token(request):
     takes a username, id and fb token, returns gepu's auth token
     '''
     data = request.data
-    id = data.get('id')
+    id = data.get('fb_id') # id here is user's fb_id
     fbtoken = data.get('fbtoken')
     email = data.get('email')
     # verify data
@@ -43,41 +45,29 @@ def get_auth_token(request):
     if 'id' not in response or response['id'] != id:
         return Response({'error': 'Invalid Credentials1'},status=status.HTTP_404_NOT_FOUND)
 
-    # find user in auth db
-    userQuery = User_auth.objects.filter(username=id)
-    if userQuery.exists():
-        auth_user = userQuery[0]
-        # if the password doesn't match
-        if (not auth_user.check_password(fbtoken)):
-            # update the token
-            auth_user.set_password(fbtoken)
-            auth_user.save()
-            # do not return
-            # return Response({'error': 'Invalid Credentials2'},status=status.HTTP_404_NOT_FOUND)
-    else:
+    try:
+        # find user in auth db
+        auth_user = User_auth.objects.get(username=id)
+    except (User_auth.DoesNotExist):
         # if user doesn't exist in auth db
         auth_user = User_auth.objects.create_user(username=id, email=email, password=fbtoken)
+    # update the token
+    auth_user.set_password(fbtoken)
+    auth_user.save()
+    # get auth token
+    db_token, _ = Token.objects.get_or_create(user=auth_user)
+    response = {'db_token' : db_token.key}
 
-    # find user in gepu db
-    gepu_user_query = User.objects.filter(fb_id=id)
-    if gepu_user_query.exists():
-        gepu_user = gepu_user_query[0]
+    try:
+        # find user in auth db
+        gepu_user = User.objects.get(fb_id=id)
         # update the fbtoken if updated
         if gepu_user.fbtoken != fbtoken:
             gepu_user.fbtoken = fbtoken
-            gepu_user.save()
-
-        # add more info to the response
-        response.update({'exist': True})
-        response.update({'user':UserSerializer(gepu_user_query[0]).data})
-    else:
+            gepu_user.save(update_fields=["fbtoken"])
+        response.update({'exist': True, 'user':UserSerializer(gepu_user).data})
+    except (User.DoesNotExist):
         response.update({'exist': False})
-        response.update({'user': None)
-
-    # get auth token
-    db_token, _ = Token.objects.get_or_create(user=auth_user)
-    # data to send back
-    response = {'db_token' : db_token.key}
 
     return Response(response, status=status.HTTP_201_CREATED)
 
@@ -88,7 +78,7 @@ def remove_auth_token(request):
     delete the session data of the user
     '''
     data = request.data
-    id = data.get('id')
+    id = data.get('fb_id')
     if id == None:
         return Response(status=status.HTTP_404_NOT_FOUND)
     # locate the user
@@ -97,7 +87,7 @@ def remove_auth_token(request):
         user_auth = User_auth.objects.get(username=id)
         # get the token object that has user token and auth_user object
         user_token = Token.objects.get(key=data.get('db_token'))
-    except (User.DoesNotExist, Token.DoesNotExist):
+    except (User_auth.DoesNotExist, Token.DoesNotExist):
         return Response(status=status.HTTP_404_NOT_FOUND)
     # confirm user Id and token match
     if (user_token.user.username != user_auth.username):
@@ -105,7 +95,6 @@ def remove_auth_token(request):
 
     # delete sessions
     user_token.delete()
-    user_auth.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 @api_view(['POST'])
@@ -182,7 +171,7 @@ def users_detail(request, id):
     elif request.method == 'PUT':
         serializer = UserSerializer(user, data=request.data,context={'request': request})
         if serializer.is_valid():
-            serializer.save()
+            serializer.save(update_fields=['car_info','phone','name', 'email','photo'])
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
