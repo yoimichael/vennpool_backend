@@ -31,7 +31,7 @@ def get_auth_token(request):
     takes a username, id and fb token, returns gepu's auth token
     '''
     data = request.data
-    id = data.get('id')
+    id = data.get('fb_id') # id here is user's fb_id
     fbtoken = data.get('fbtoken')
     email = data.get('email')
     # verify data
@@ -41,32 +41,31 @@ def get_auth_token(request):
     # verify fbtoken
     response = get('https://graph.facebook.com/me?access_token='+ fbtoken).json()
     if 'id' not in response or response['id'] != id:
-        return Response({'error': 'Invalid Credentials1'},status=status.HTTP_404_NOT_FOUND)
+        return Response({'error': 'Invalid Credentials1','response': response},status=status.HTTP_404_NOT_FOUND)
 
-    # authenticate using id as username, token as password
-    userQuery = User_auth.objects.filter(username=id)
-    if len(userQuery) != 0:
-        # if the password doesn't match
-        if (not userQuery[0].check_password(fbtoken)):
-            # update the token
-            userQuery[0].set_password(fbtoken)
-            userQuery[0].save()
-            # do not return
-            # return Response({'error': 'Invalid Credentials2'},status=status.HTTP_404_NOT_FOUND)
-        # this token will be this users even if they don't match
-        user = userQuery[0]
-    else:
-        # if user doesn't exist
-        user = User_auth.objects.create_user(username=id, email=email, password=fbtoken)
-    # get token
-    db_token, _ = Token.objects.get_or_create(user=user)
-    # data to send back
+    try:
+        # find user in auth db
+        auth_user = User_auth.objects.get(username=id)
+    except (User_auth.DoesNotExist):
+        # if user doesn't exist in auth db
+        auth_user = User_auth.objects.create_user(username=id, email=email, password=fbtoken)
+    # update the token
+    auth_user.set_password(fbtoken)
+    auth_user.save()
+    # get auth token
+    db_token, _ = Token.objects.get_or_create(user=auth_user)
     response = {'db_token' : db_token.key}
-    gepu_user_query = User.objects.filter(fb_id=id)
-    # get the user data if exist
-    response.update({'exist': gepu_user_query.exists()})
-    if response['exist']:
-        response.update({'user':UserSerializer(gepu_user_query[0]).data})
+
+    try:
+        # find user in auth db
+        gepu_user = User.objects.get(fb_id=id)
+        # update the fbtoken if updated
+        if gepu_user.fbtoken != fbtoken:
+            gepu_user.fbtoken = fbtoken
+            gepu_user.save()
+        response.update({'exist': True, 'user':UserSerializer(gepu_user).data})
+    except (User.DoesNotExist):
+        response.update({'exist': False})
 
     return Response(response, status=status.HTTP_201_CREATED)
 
@@ -86,7 +85,7 @@ def remove_auth_token(request):
         user_auth = User_auth.objects.get(username=id)
         # get the token object that has user token and auth_user object
         user_token = Token.objects.get(key=data.get('db_token'))
-    except (User.DoesNotExist, Token.DoesNotExist):
+    except (User_auth.DoesNotExist, Token.DoesNotExist):
         return Response(status=status.HTTP_404_NOT_FOUND)
     # confirm user Id and token match
     if (user_token.user.username != user_auth.username):
@@ -94,7 +93,6 @@ def remove_auth_token(request):
 
     # delete sessions
     user_token.delete()
-    user_auth.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 @api_view(['POST'])

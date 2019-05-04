@@ -3,10 +3,11 @@ from .models import User, Hash, Post, Event
 
 ''' no backward relation from serializer '''
 
+# no need to feedback 'join_date'
 class UserSerializer(ModelSerializer):
     class Meta:
         model = User
-        fields = ('id','car_info','phone', 'fb_id','messenger_id','fbtoken','name', 'email','photo','join_date')
+        fields = ('id','car_info','phone', 'fb_id','messenger_id','fbtoken','name', 'email','photo')
 
 class PostSerializer(ModelSerializer):
     users = UserSerializer(read_only=True, many=True)
