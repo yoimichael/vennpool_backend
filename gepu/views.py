@@ -202,7 +202,7 @@ def create_ride(request):
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         event = serializer.save()
-    # 
+    #
     #
     # # get the token object that has user token and auth_user object
     # hosts = event.hosts;
@@ -399,7 +399,7 @@ def get_event(request, hash_code):
 
     # respond with the event data
     serializer = EventSerializer(event,context={'request': request})
-    return Response(serializer.data
+    return Response(serializer.data)
 
 
 # unused functions

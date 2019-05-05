@@ -55,8 +55,9 @@ class Event(models.Model):
     # title = models.CharField(max_length=20,default='')
     # to_addr = models.TextField(default='')
     # time = models.DateTimeField(default=timezone.now)
+    # what's shown as string (e.f.admin application, object)
     def __str__(self):
-        return self.title
+        return self.fb_eid
 
 def five_days_valid():
     '''
