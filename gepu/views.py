@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework import status
 # REST auth
+#from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import AllowAny # default is IsAuthenticated
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
@@ -62,7 +63,7 @@ def get_auth_token(request):
         # update the fbtoken if updated
         if gepu_user.fbtoken != fbtoken:
             gepu_user.fbtoken = fbtoken
-            gepu_user.save()
+            gepu_user.save(update_fields=["fbtoken"])
         response.update({'exist': True, 'user':UserSerializer(gepu_user).data})
     except (User.DoesNotExist):
         response.update({'exist': False})
@@ -76,7 +77,7 @@ def remove_auth_token(request):
     delete the session data of the user
     '''
     data = request.data
-    id = data.get('id')
+    id = data.get('fb_id')
     if id == None:
         return Response(status=status.HTTP_404_NOT_FOUND)
     # locate the user
@@ -169,7 +170,7 @@ def users_detail(request, id):
     elif request.method == 'PUT':
         serializer = UserSerializer(user, data=request.data,context={'request': request})
         if serializer.is_valid():
-            serializer.save()
+            serializer.save(update_fields=['car_info','phone','name', 'email','photo'])
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
