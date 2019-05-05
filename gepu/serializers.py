@@ -27,3 +27,4 @@ class HashSerializer(ModelSerializer):
     class Meta:
         model = Hash
         fields = ('hash_code','whitelist','valid','valid_until','event')
+
