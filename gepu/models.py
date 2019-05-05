@@ -55,6 +55,7 @@ class Event(models.Model):
     # title = models.CharField(max_length=20,default='')
     # to_addr = models.TextField(default='')
     # time = models.DateTimeField(default=timezone.now)
+    # what's shown as string (e.f.admin application, object)
     def __str__(self):
         return str(self.fb_eid)
 
@@ -74,4 +75,3 @@ class Hash(models.Model):
 
     def __str__(self):
         return self.hash_code
-

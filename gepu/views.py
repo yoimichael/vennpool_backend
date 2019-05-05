@@ -188,38 +188,55 @@ def event_list(request, event_ids):
 # Get the type of request
 @api_view(['POST'])
 def create_ride(request):
-    ''' creates a ride for the event, if the event doesn't exist, create one'''
-    data = request.data.event
-    fb_eid = data.get('fb_eid') # id here is user's fb_id
+    '''
+    gets the user's db id, fb_eid, and ride_data:
+    isRide (bool), third_Party (bool), seats (PositiveSmallIntegerField)
+    creates a ride for the event, if the event doesn't exist, create one
+    '''
+    # get request data
+    data = request.data
+    fb_eid = data.get('fb_eid')
+    id = data.get('id')
+    ride_data = data.ride_data
 
     try:
-        # get User object that has all user data
+        # locate user
+        user = User.objects.get(id=id)
+        # get the token object that has user token and auth_user object
+        user_token = Token.objects.get(key=request.META['Authorization'])
+        # confirm user Id and token match
+        if (user_token.user.username != user.fb_id):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+    except (User.DoesNotExist, Token.DoesNotExist):
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    try:
+        # locate event
         event = Event.objects.get(fb_eid=fb_eid)
     except (Event.DoesNotExist, Token.DoesNotExist):
         # create a new event if it doesn't exist
-        serializer = EventSerializer(data=request.data)
+        serializer = EventSerializer(data={'fb_eid':fb_eid})
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         event = serializer.save()
-    # 
-    #
-    # # get the token object that has user token and auth_user object
-    # hosts = event.hosts;
-    # event = User.objects.get(fb_eid=fb_eid)
-    #
-    #
-    # serializer = PostSerializer(data=request.data)
-    #
-    # email = data.get('email')
-    #
-    # # need isRide (bool), third_Party (bool), seats (PositiveSmallIntegerField)
-    # # event_id
-    #
-    # event = models.ForeignKey('Event',on_delete=models.CASCADE, related_name='posts')
-    # creator = models.ForeignKey('User',on_delete=models.CASCADE,related_name="your_posts")
-    # time = models.DateTimeField(default=timezone.now,blank=True)
-    # users = models.ManyToManyField('User',default=-1, related_name='posts', blank=True)
+        # make the creator a host
+        event.hosts.add(user)
 
+    # make user a member
+    if user not in event.members:
+        event.members.add(user)
+
+    # add ForeignKey to new post
+    ride_data['creator'] = users
+    ride_data['event'] = event
+    # create ride for user
+    serializer = PostSerializer(data=ride_data)
+    # save the data
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    else:
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # Get the type of request
