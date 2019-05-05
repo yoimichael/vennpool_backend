@@ -32,24 +32,24 @@ def get_auth_token(request):
     takes a username, id and fb token, returns gepu's auth token
     '''
     data = request.data
-    id = data.get('fb_id') # id here is user's fb_id
+    fb_id = data.get('fb_id') # id here is user's fb_id
     fbtoken = data.get('fbtoken')
     email = data.get('email')
     # verify data
-    if id is None or fbtoken is None:
+    if fb_id is None or fbtoken is None:
         return Response({'error': 'Invalid Credentials0'},status=status.HTTP_404_NOT_FOUND)
 
     # verify fbtoken
     response = get('https://graph.facebook.com/me?access_token='+ fbtoken).json()
-    if 'id' not in response or response['id'] != id:
-        return Response({'error': 'Invalid Credentials1','response': response},status=status.HTTP_404_NOT_FOUND)
+    if 'id' not in response or response['id'] != fb_id:
+        return Response({'error': 'Invalid Credentials1'},status=status.HTTP_404_NOT_FOUND)
 
     try:
         # find user in auth db
-        auth_user = User_auth.objects.get(username=id)
+        auth_user = User_auth.objects.get(username=fb_id)
     except (User_auth.DoesNotExist):
         # if user doesn't exist in auth db
-        auth_user = User_auth.objects.create_user(username=id, email=email, password=fbtoken)
+        auth_user = User_auth.objects.create_user(username=fb_id, email=email, password=fbtoken)
     # update the token
     auth_user.set_password(fbtoken)
     auth_user.save()
@@ -59,7 +59,7 @@ def get_auth_token(request):
 
     try:
         # find user in auth db
-        gepu_user = User.objects.get(fb_id=id)
+        gepu_user = User.objects.get(fb_id=fb_id)
         # update the fbtoken if updated
         if gepu_user.fbtoken != fbtoken:
             gepu_user.fbtoken = fbtoken
@@ -98,6 +98,9 @@ def remove_auth_token(request):
 
 @api_view(['POST'])
 def create_user(request):
+    # if user doesn't have a fb id (a bu from the complete profile)
+    if 'fb_id' not in request.data or not request.data['fb_id']:
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     # store the user data to db
     serializer = UserSerializer(data=request.data)
     # save the data
@@ -105,45 +108,6 @@ def create_user(request):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-# # Get the type of request
-# @api_view(['GET', 'POST'])
-# def users_list(request):
-#     """
-#     List users, or create a new user.
-#     """
-#     # GET request
-#     if request.method == 'GET':
-#         data = []
-#         nextPage = 1
-#         previousPage = 1
-#         users = User.objects.all()
-#         page = request.GET.get('page', 1)
-#         paginator = Paginator(users, 10)
-#         try:
-#             data = paginator.page(page)
-#         except PageNotAnInteger:
-#             data = paginator.page(1)
-#         except EmptyPage:
-#             data = paginator.page(paginator.num_pages)
-#
-#         serializer = UserSerializer(data,context={'request': request} ,many=True)
-#         if data.has_next():
-#             nextPage = data.next_page_number()
-#         if data.has_previous():
-#             previousPage = data.previous_page_number()
-#
-#         return Response({'data': serializer.data , 'count': paginator.count, 'numpages' : paginator.num_pages, 'nextlink': '/api/user/?page=' + str(nextPage), 'prevlink': '/api/user/?page=' + str(previousPage)})
-#
-#     # POST request
-#     elif request.method == 'POST':
-#         # fetch the data
-#         serializer = UserSerializer(data=request.data)
-#         # save the data
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response(serializer.data, status=status.HTTP_201_CREATED)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET', 'PUT', 'DELETE'])
 def users_detail(request, id):
@@ -220,34 +184,43 @@ def event_list(request, event_ids):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['GET', 'PUT', 'DELETE'])
-def event_detail(request, id):
-    """
-    Retrieve, update or delete a event by id/pk.
-    """
-    # locate the event
-    try:
-        event = Event.objects.get(id=id)
-    except Event.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
-    if request.method == 'GET':
-        serializer = EventSerializer(event,context={'request': request})
-        return Response(serializer.data)
-
-    elif request.method == 'PUT':
-        serializer = EventSerializer(event, data=request.data,context={'request': request})
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    elif request.method == 'DELETE':
-        event.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-        # POST request
-
 # ----------------------POST----------------------
+# Get the type of request
+@api_view(['POST'])
+def create_ride(request):
+    ''' creates a ride for the event, if the event doesn't exist, create one'''
+    data = request.data.event
+    fb_eid = data.get('fb_eid') # id here is user's fb_id
+
+    try:
+        # get User object that has all user data
+        event = Event.objects.get(fb_eid=fb_eid)
+    except (Event.DoesNotExist, Token.DoesNotExist):
+        # create a new event if it doesn't exist
+        serializer = EventSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        event = serializer.save()
+    # 
+    #
+    # # get the token object that has user token and auth_user object
+    # hosts = event.hosts;
+    # event = User.objects.get(fb_eid=fb_eid)
+    #
+    #
+    # serializer = PostSerializer(data=request.data)
+    #
+    # email = data.get('email')
+    #
+    # # need isRide (bool), third_Party (bool), seats (PositiveSmallIntegerField)
+    # # event_id
+    #
+    # event = models.ForeignKey('Event',on_delete=models.CASCADE, related_name='posts')
+    # creator = models.ForeignKey('User',on_delete=models.CASCADE,related_name="your_posts")
+    # time = models.DateTimeField(default=timezone.now,blank=True)
+    # users = models.ManyToManyField('User',default=-1, related_name='posts', blank=True)
+
+
 
 # Get the type of request
 @api_view(['GET', 'POST'])
@@ -427,3 +400,70 @@ def get_event(request, hash_code):
     serializer = EventSerializer(event,context={'request': request})
     return Response(serializer.data)
 
+
+# unused functions
+# # Get the type of request
+# @api_view(['GET', 'POST'])
+# def users_list(request):
+#     """
+#     List users, or create a new user.
+#     """
+#     # GET request
+#     if request.method == 'GET':
+#         data = []
+#         nextPage = 1
+#         previousPage = 1
+#         users = User.objects.all()
+#         page = request.GET.get('page', 1)
+#         paginator = Paginator(users, 10)
+#         try:
+#             data = paginator.page(page)
+#         except PageNotAnInteger:
+#             data = paginator.page(1)
+#         except EmptyPage:
+#             data = paginator.page(paginator.num_pages)
+#
+#         serializer = UserSerializer(data,context={'request': request} ,many=True)
+#         if data.has_next():
+#             nextPage = data.next_page_number()
+#         if data.has_previous():
+#             previousPage = data.previous_page_number()
+#
+#         return Response({'data': serializer.data , 'count': paginator.count, 'numpages' : paginator.num_pages, 'nextlink': '/api/user/?page=' + str(nextPage), 'prevlink': '/api/user/?page=' + str(previousPage)})
+#
+#     # POST request
+#     elif request.method == 'POST':
+#         # fetch the data
+#         serializer = UserSerializer(data=request.data)
+#         # save the data
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data, status=status.HTTP_201_CREATED)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# @api_view(['GET', 'PUT', 'DELETE'])
+# def event_detail(request, id):
+#     """
+#     Retrieve, update or delete a event by id/pk.
+#     """
+#     # locate the event
+#     try:
+#         event = Event.objects.get(id=id)
+#     except Event.DoesNotExist:
+#         return Response(status=status.HTTP_404_NOT_FOUND)
+#
+#     if request.method == 'GET':
+#         serializer = EventSerializer(event,context={'request': request})
+#         return Response(serializer.data)
+#
+#     elif request.method == 'PUT':
+#         serializer = EventSerializer(event, data=request.data,context={'request': request})
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#
+#     elif request.method == 'DELETE':
+#         event.delete()
+#         return Response(status=status.HTTP_204_NO_CONTENT)
+#         # POST request

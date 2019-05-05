@@ -17,7 +17,7 @@ from django.conf.urls import url, include
 from django.contrib import admin
 
 # API call imports
-from gepu.views import remove_auth_token, get_auth_token, create_user, users_detail, post_list, post_detail, event_list, event_detail, get_hash, get_event
+from gepu.views import remove_auth_token, get_auth_token, create_user, users_detail, post_list, post_detail, event_list,get_hash, get_event
 
 # default index page
 from django.http import HttpResponse
@@ -34,7 +34,6 @@ urlpatterns = [
     url(r'^api/post/(?P<post_ids>[0-9,]*)$', post_list),
     url(r'^api/post/(?P<id>[0-9]+)$', post_detail),
     url(r'^api/event/(?P<event_ids>[0-9,]*)$', event_list),
-    url(r'^api/event/(?P<id>[0-9]+)$', event_detail),
     url(r'^api/hash/code/(?P<hash_code>[.]{4})$', get_event),
     url(r'^api/hash/event/(?P<event_id>[0-9,]+)$', get_hash),
 ]

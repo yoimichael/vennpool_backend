@@ -45,18 +45,18 @@ class Event(models.Model):
     backward relations: posts, hash
     '''
     # default id: Serial for event
-    fb_eid = models.BigIntegerField(null=True, blank=True)
+    fb_eid = models.BigIntegerField(default=-1)
     members = models.ManyToManyField('User',default=-1, related_name='events')
-    # fb API may provide
     hosts = models.ManyToManyField('User',default=-1, related_name='your_events')
-    title = models.CharField(max_length=20,default='')
-    to_addr = models.TextField(default='')
-    time = models.DateTimeField(default=timezone.now)
+
+    # fb API may provide
     info = models.TextField(default='', null=True,blank=True)
     photo = models.TextField(default='', null=True,blank=True)
-
+    # title = models.CharField(max_length=20,default='')
+    # to_addr = models.TextField(default='')
+    # time = models.DateTimeField(default=timezone.now)
     def __str__(self):
-        return self.title
+        return str(self.fb_eid)
 
 def five_days_valid():
     '''
