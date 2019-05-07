@@ -114,32 +114,28 @@ def users_detail(request, id):
     """
     Retrieve, update or delete a user by id/pk.
     """
-    # locate the user
-    try:
-        # get User object that has all user data
-        user = User.objects.get(id=id)
-        # get the token object that has user token and auth_user object
-        user_token = Token.objects.get(key=request.META['Authorization'])
-    except (User.DoesNotExist, Token.DoesNotExist):
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
     if request.method == 'GET':
+        try:
+            # locate the user
+            user = User.objects.get(id=id)
+        except (User.DoesNotExist):
+            return Response(status=status.HTTP_404_NOT_FOUND)
         serializer = UserSerializer(user,context={'request': request})
         if serializer.is_valid():
             return Response(serializer.data,status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
     else:
-        # confirm user Id and token match
         try:
+            # confirm user Id and token match
+            user_id = request.data.get('id')
             # locate user
-            user = User.objects.get(id=id)
+            user = User.objects.get(id=user_id)
             # get the token object that has user token and auth_user object
             user_token = Token.objects.get(key=request.META['Authorization'])
             # confirm user Id and token match
             if (user_token.user.username != user.fb_id):
-                return Response(status=status.HTTP_404_NOT_FOUND)
+                return Response(status=status.HTTP_400_BAD_REQUEST)
         except (User.DoesNotExist, Token.DoesNotExist):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
