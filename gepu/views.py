@@ -123,25 +123,38 @@ def users_detail(request, id):
     except (User.DoesNotExist, Token.DoesNotExist):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-    # confirm user Id and token match
-    if (user_token.user.username != user.fb_id):
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
     if request.method == 'GET':
         serializer = UserSerializer(user,context={'request': request})
-        return Response(serializer.data)
-
-    elif request.method == 'PUT':
-        serializer = UserSerializer(user, data=request.data,context={'request': request})
         if serializer.is_valid():
-            serializer.save(update_fields=['car_info','phone','name', 'email','photo'])
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.data,status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    elif request.method == 'DELETE':
-        user.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-        # POST request
+    else:
+        # confirm user Id and token match
+        try:
+            # locate user
+            user = User.objects.get(id=id)
+            # get the token object that has user token and auth_user object
+            user_token = Token.objects.get(key=request.META['Authorization'])
+            # confirm user Id and token match
+            if (user_token.user.username != user.fb_id):
+                return Response(status=status.HTTP_404_NOT_FOUND)
+        except (User.DoesNotExist, Token.DoesNotExist):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        # udpate user
+        if request.method == 'PUT':
+            serializer = UserSerializer(user, data=request.data,context={'request': request})
+            if serializer.is_valid():
+                serializer.save(update_fields=['car_info','phone','name', 'email','photo'])
+                return Response(serializer.data)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        elif request.method == 'DELETE':
+            user.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        # POST request?
 
 
 # ----------------------EVENT----------------------
