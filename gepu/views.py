@@ -144,7 +144,7 @@ def users_detail(request, id):
 
         # udpate user
         if request.method == 'PUT':
-            serializer = UserSerializer(user, data=request.data,context={'request': request})
+            serializer = UserSerializer(data=request.data,context={'request': request})
             if serializer.is_valid():
                 serializer.save(update_fields=['car_info','phone','name', 'email','photo'])
                 return Response(serializer.data)
@@ -162,6 +162,7 @@ def users_detail(request, id):
 def event_list(request, event_ids):
     """
     List events, or create a new event.
+    returns all posts ids associated for that event
     """
     # GET request
     if request.method == 'GET':
