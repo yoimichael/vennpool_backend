@@ -14,6 +14,9 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import User as User_auth
 from requests import get
 
+#test
+from django.core import serializers
+
 # user Django paginator to divide many data into pages
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .models import User, Event, Post, Hash
@@ -120,11 +123,10 @@ def users_detail(request, id):
             user = User.objects.get(id=id)
         except (User.DoesNotExist):
             return Response(status=status.HTTP_404_NOT_FOUND)
-        serializer = UserSerializer(user,context={'request': request})
-        if serializer.is_valid():
-            return Response(serializer.data,status=status.HTTP_200_OK)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serialized_data = serializers.serialize("json",[user],fields=('id','name','car_info','fb_id'))
+
+        # serializer = UserSerializer(user,context={'request': request},fields=('id','name','car_info','fb_id'))
+        return Response(serialized_data,status=status.HTTP_200_OK)
     else:
         try:
             # confirm user Id and token match
@@ -132,9 +134,10 @@ def users_detail(request, id):
             # locate user
             user = User.objects.get(id=user_id)
             # get the token object that has user token and auth_user object
-            user_token = Token.objects.get(key=request.META['Authorization'])
+            db_token = request.META['HTTP_AUTHORIZATION'].split(' ')[1]
+            user_token = Token.objects.get(key=db_token)
             # confirm user Id and token match
-            if (user_token.user.username != user.fb_id):
+            if (user_token.user.username != str(user.fb_id)):
                 return Response(status=status.HTTP_400_BAD_REQUEST)
         except (User.DoesNotExist, Token.DoesNotExist):
             return Response(status=status.HTTP_404_NOT_FOUND)
