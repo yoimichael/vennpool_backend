@@ -123,7 +123,7 @@ def users_detail(request, id):
             user = User.objects.get(id=id)
         except (User.DoesNotExist):
             return Response(status=status.HTTP_404_NOT_FOUND)
-        serialized_data = serializers.serialize("json", user,fields=('id','name','car_info','fb_id'))
+        serialized_data = serializers.serialize("json", [user],fields=('id','name','car_info','fb_id'))
 
         # serializer = UserSerializer(user,context={'request': request},fields=('id','name','car_info','fb_id'))
         return Response(serialized_data,status=status.HTTP_200_OK)
@@ -137,16 +137,18 @@ def users_detail(request, id):
             db_token = request.META['HTTP_AUTHORIZATION'].split(' ')[1]
             user_token = Token.objects.get(key=db_token)
             # confirm user Id and token match
-            if (user_token.user.username != user.fb_id):
-                return Response({'username':user_token.user.username, 'fb_id': user.fb_id}, status=status.HTTP_400_BAD_REQUEST)
+            if (user_token.user.username != str(user.fb_id)):
+                return Response(status=status.HTTP_400_BAD_REQUEST)
         except (User.DoesNotExist, Token.DoesNotExist):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         # udpate user
         if request.method == 'PUT':
-            serializer = UserSerializer(data=request.data,context={'request': request})
+            # serializer = UserSerializer(data=request.data,context={'request': request})
+            serializer = UserSerializer(data=request.data,context={'request': request}.partial=True)
             if serializer.is_valid():
-                serializer.save(update_fields=['car_info','phone','name', 'email','photo'])
+                serializer.save()
+                # serializer.save(update_fields=['car_info','phone','name', 'email','photo'])
                 return Response(serializer.data)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
