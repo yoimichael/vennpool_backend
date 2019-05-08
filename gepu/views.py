@@ -144,11 +144,12 @@ def users_detail(request, id):
 
         # udpate user
         if request.method == 'PUT':
-            serializer = UserSerializer(data=request.data,context={'request': request})
-            if serializer.is_valid():
-                serializer.save(update_fields=['car_info','phone','name', 'email','photo'])
-                return Response(serializer.data)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            user.car_info = request.data.get('car_info')
+            user.phone = request.data.get('phone')
+            user.name = request.data.get('name')
+            user.save()
+            serializer = UserSerializer(user)
+            return Response(serializer.data)
 
         elif request.method == 'DELETE':
             user.delete()
