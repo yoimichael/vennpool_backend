@@ -19,12 +19,13 @@ class PostSerializer(ModelSerializer):
 # serializers used for RESTful responses
 class EventSerializer(ModelSerializer):
     members = UserSerializer(read_only=True, many=True)
+    hosts = UserSerializer(read_only=True, many=True)
+    posts = PostSerializer(read_only=True, many=True)
     class Meta:
         model = Event
-        fields = ('id','fb_eid', 'title','to_addr','time','info','photo','members')
+        fields = ('id','fb_eid','posts','members','hosts')
 
 class HashSerializer(ModelSerializer):
     class Meta:
         model = Hash
         fields = ('hash_code','whitelist','valid','valid_until','event')
-
