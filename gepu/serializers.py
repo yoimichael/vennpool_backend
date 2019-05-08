@@ -12,32 +12,27 @@ class UserSerializer(ModelSerializer):
 class UserPublicSerializer(ModelSerializer):
     class Meta:
         model = User
-        fields = ('id','car_info','fb_id','name')
+        fields = ('id','car_info','fb_id','name','phone')
 
 class PostSerializer(ModelSerializer):
     # can access phone number
-    users = UserSerializer(read_only=True, many=True)
-    class Meta:
-        model = Post
-        fields = ('id','isRide', 'third_Party', 'from_addr','seats','event',
-        'creator','time','users')
-    # not using to_addr for now
-
-class PostPublicSerializer(ModelSerializer):
     users = UserPublicSerializer(read_only=True, many=True)
     class Meta:
         model = Post
-        fields = ('id','isRide', 'third_Party', 'from_addr','seats','event',
-        'creator','time','users')
+        fields = ('id', 'from_addr','seats','creator','time','users')
+    # not using ,'isRide', 'third_Party', to_addr for now
+
+class PostPublicSerializer(ModelSerializer):
+    class Meta:
+        model = Post
+        fields = ('id', 'from_addr','seats','creator','time')
 
 # serializers used for RESTful responses
 class EventSerializer(ModelSerializer):
-    members = UserPublicSerializer(read_only=True, many=True)
-    hosts = UserPublicSerializer(read_only=True, many=True)
-    posts = PostSerializer(read_only=True, many=True)
+    posts = PostPublicSerializer(read_only=True, many=True)
     class Meta:
         model = Event
-        fields = ('id','fb_eid','posts','members','hosts')
+        fields = ('fb_eid','posts')
 
 class HashSerializer(ModelSerializer):
     class Meta:
