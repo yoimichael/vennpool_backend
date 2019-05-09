@@ -165,7 +165,7 @@ def event_list(request):
     Take a dictionary of fb_eids to their time
     returns all posts ids associated for that event
     """
-    fb_eid_time_dict = request.data.events
+    fb_eid_time_dict = request.data.get('event_time')
     # limit the size of event_ids
     if (len(fb_eid_time_dict) > 40):
         return Response(status=status.HTTP_400_BAD_REQUEST)
