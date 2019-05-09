@@ -159,44 +159,36 @@ def users_detail(request, id):
 
 # ----------------------EVENT----------------------
 
-@api_view(['GET', 'POST'])
-def event_list(request, event_ids):
+@api_view(['GET'])
+def event_list(request):
     """
-    List events, or create a new event.
+    Take a dictionary of fb_eids to their time
     returns all posts ids associated for that event
     """
-    # GET request
-    if request.method == 'GET':
-        data = []
-        nextPage = 1
-        previousPage = 1
-        events = Event.objects.filter(id__in=event_ids.split(','))
-        page = request.GET.get('page', 1)
-        paginator = Paginator(events, 10)
-        try:
-            data = paginator.page(page)
-        except PageNotAnInteger:
-            data = paginator.page(1)
-        except EmptyPage:
-            data = paginator.page(paginator.num_pages)
+    fb_eid_time_dict = request.data.events
+    # limit the size of event_ids
+    if (len(fb_eid_time_dict) > 40):
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        serializer = EventSerializer(data,context={'request': request} ,many=True)
-        if data.has_next():
-            nextPage = data.next_page_number()
-        if data.has_previous():
-            previousPage = data.previous_page_number()
+    # TODO:: get info about user id = data.get('id')
 
-        return Response({'data': serializer.data , 'count': paginator.count, 'numpages' : paginator.num_pages, 'nextlink': '/api/event/?page=' + str(nextPage), 'prevlink': '/api/event/?page=' + str(previousPage)})
+    # get the query set of given events
+    events_qs = Event.objects.filter(fb_eid__in=fb_eid_time_dict.keys())
 
-    # POST request
-    elif request.method == 'POST':
-        # fetch the data
-        serializer = EventSerializer(data=request.data)
-        # save the data
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    # if all events exist, repond with serialized info
+    if len(events_qs) == len(fb_eid_time_dict.keys()):
+        serializer = EventSerializer(events_qs,many=True)
+    else:
+        # if some events don't exist in db, create them
+        event_list = []
+        for fb_eid in fb_eid_time_dict:
+            new_event = events_qs.get_or_create(
+                            fb_eid = fb_eid,
+                            time=fb_eid_time_dict[fb_eid])
+            event_list.append(new_event)
+        serializer = EventSerializer(event_list,many=True)
+
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 # ----------------------POST----------------------
 # Get the type of request
