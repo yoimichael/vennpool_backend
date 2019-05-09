@@ -51,13 +51,15 @@ class Event(models.Model):
 
     # fb API may provide
     info = models.TextField(default='', null=True,blank=True)
-    photo = models.TextField(default='', null=True,blank=True)
+    # photo = models.TextField(default='', null=True,blank=True)
     # title = models.CharField(max_length=20,default='')
     # to_addr = models.TextField(default='')
-    # time = models.DateTimeField(default=timezone.now)
+    time = models.DateTimeField(default=timezone.now)
     # what's shown as string (e.f.admin application, object)
     def __str__(self):
         return str(self.fb_eid)
+    def __int__(self):
+        return self.fb_eid
 
 def five_days_valid():
     '''
