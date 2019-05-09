@@ -32,7 +32,7 @@ class EventSerializer(ModelSerializer):
     posts = PostPublicSerializer(read_only=True, many=True)
     class Meta:
         model = Event
-        fields = ('fb_eid','posts')
+        fields = ('id','fb_eid','posts')
 
 class HashSerializer(ModelSerializer):
     class Meta:

@@ -88,15 +88,18 @@ def remove_auth_token(request):
         # get User object that has all user data
         user_auth = User_auth.objects.get(username=id)
         # get the token object that has user token and auth_user object
-        user_token = Token.objects.get(key=data.get('db_token'))
+        # user_token = Token.objects.get(key=data.get('db_token'))
+        # confirm user Id and token match
+        # if (user_token.user.username != user_auth.username):
+        if (request.user.username != user_auth.username):
+            return Response(status=status.HTTP_404_NOT_FOUND)
     except (User_auth.DoesNotExist, Token.DoesNotExist):
-        return Response(status=status.HTTP_404_NOT_FOUND)
-    # confirm user Id and token match
-    if (user_token.user.username != user_auth.username):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     # delete sessions
-    user_token.delete()
+    # user_token.delete()
+    request.user.delete()
+
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 @api_view(['POST'])
@@ -134,10 +137,11 @@ def users_detail(request, id):
             # locate user
             user = User.objects.get(id=user_id)
             # get the token object that has user token and auth_user object
-            db_token = request.META['HTTP_AUTHORIZATION'].split(' ')[1]
-            user_token = Token.objects.get(key=db_token)
+            # db_token = request.META['HTTP_AUTHORIZATION'].split(' ')[1]
+            # user_token = Token.objects.get(key=db_token)
             # confirm user Id and token match
-            if (user_token.user.username != str(user.fb_id)):
+            # if (user_token.user.username != str(user.fb_id)):
+            if (request.user.username != str(user.fb_id)):
                 return Response(status=status.HTTP_400_BAD_REQUEST)
         except (User.DoesNotExist, Token.DoesNotExist):
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -209,9 +213,10 @@ def create_ride(request):
         # locate user
         user = User.objects.get(id=id)
         # get the token object that has user token and auth_user object
-        user_token = Token.objects.get(key=request.META['Authorization'])
+        # user_token = Token.objects.get(key=request.META['Authorization'])
         # confirm user Id and token match
-        if (user_token.user.username != user.fb_id):
+        # if (user_token.user.username != user.fb_id):
+        if (request.user.username != user.fb_id):
             return Response(status=status.HTTP_404_NOT_FOUND)
     except (User.DoesNotExist, Token.DoesNotExist):
         return Response(status=status.HTTP_404_NOT_FOUND)
