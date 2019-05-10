@@ -163,32 +163,35 @@ def users_detail(request, id):
 
 # ----------------------EVENT----------------------
 
-@api_view(['GET'])
+import logging
+logger = logging.getLogger('django')
+@api_view(['POST'])
 def event_list(request):
     """
     Take a dictionary of fb_eids to their time
     returns all posts ids associated for that event
     """
-    fb_eid_time_dict = request.data.get('event_time')
+    fb_eid_time = request.data
+    logger.info("The value of var is %r", request.data)
     # limit the size of event_ids
-    if (len(fb_eid_time_dict) > 40):
+    if (len(fb_eid_time) > 40):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     # TODO:: get info about user id = data.get('id')
 
     # get the query set of given events
-    events_qs = Event.objects.filter(fb_eid__in=fb_eid_time_dict.keys())
+    events_qs = Event.objects.filter(fb_eid__in=fb_eid_time.keys())
 
     # if all events exist, repond with serialized info
-    if len(events_qs) == len(fb_eid_time_dict.keys()):
+    if len(events_qs) == len(fb_eid_time):
         serializer = EventSerializer(events_qs,many=True)
     else:
         # if some events don't exist in db, create them
         event_list = []
-        for fb_eid in fb_eid_time_dict:
+        for fb_eid in fb_eid_time:
             new_event = events_qs.get_or_create(
                             fb_eid = fb_eid,
-                            time=fb_eid_time_dict[fb_eid])
+                            time=fb_eid_time[fb_eid])
             event_list.append(new_event)
         serializer = EventSerializer(event_list,many=True)
 
