@@ -23,6 +23,7 @@ class PostSerializer(ModelSerializer):
     # not using ,'isRide', 'third_Party', to_addr for now
 
 class PostPublicSerializer(ModelSerializer):
+    creator = UserPublicSerializer(read_only=True)
     class Meta:
         model = Post
         fields = ('id', 'from_addr','seats','creator','time')
