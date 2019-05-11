@@ -177,7 +177,7 @@ def event_list(request):
     if (len(fb_eid_time) > 40):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
-    # TODO:: get info about user id = data.get('id')
+    # TODO:: get info about user id = data.get('id') and add user to event (for post protection: check if user belongs to the event)
 
     # get the query set of given events
     events_qs = Event.objects.filter(fb_eid__in=fb_eid_time.keys())
@@ -252,6 +252,32 @@ def create_ride(request):
     else:
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['GET', 'PUT', 'DELETE'])
+def post_detail(request, id):
+    """
+    Retrieve, update or delete a post by id/pk.
+    """
+    # locate the post
+    try:
+        post = Post.objects.get(id=id)
+    except Post.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'GET':
+        serializer = PostSerializer(post,context={'request': request})
+        return Response(serializer.data)
+
+    elif request.method == 'PUT':
+        serializer = PostSerializer(post, data=request.data,context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == 'DELETE':
+        post.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+        # POST request
 
 # Get the type of request
 @api_view(['GET', 'POST'])
@@ -292,32 +318,6 @@ def post_list(request, post_ids):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['GET', 'PUT', 'DELETE'])
-def post_detail(request, id):
-    """
-    Retrieve, update or delete a post by id/pk.
-    """
-    # locate the post
-    try:
-        post = Post.objects.get(id=id)
-    except Post.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
-    if request.method == 'GET':
-        serializer = PostSerializer(post,context={'request': request})
-        return Response(serializer.data)
-
-    elif request.method == 'PUT':
-        serializer = PostSerializer(post, data=request.data,context={'request': request})
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    elif request.method == 'DELETE':
-        post.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-        # POST request
 
 # ----------------------HASH----------------------
 @api_view(['GET'])
