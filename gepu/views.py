@@ -162,9 +162,10 @@ def users_detail(request, id):
 
 
 # ----------------------EVENT----------------------
+# import logging
+# logger = logging.getLogger("django")
+#logger.info("The value of var is %r", fb_eid_time)
 
-import logging
-logger = logging.getLogger('django')
 @api_view(['POST'])
 def event_list(request):
     """
@@ -172,7 +173,6 @@ def event_list(request):
     returns all posts ids associated for that event
     """
     fb_eid_time = request.data
-    logger.info("The value of var is %r", request.data)
     # limit the size of event_ids
     if (len(fb_eid_time) > 40):
         return Response(status=status.HTTP_400_BAD_REQUEST)
