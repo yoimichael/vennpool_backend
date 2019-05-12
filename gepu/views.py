@@ -283,6 +283,7 @@ def post_detail(request, id):
 def post_list(request, post_ids):
     """
     create new post(s)
+    and return them
     """
     try:
         user_id = request.data.get('uid');
@@ -297,17 +298,20 @@ def post_list(request, post_ids):
     except (User.DoesNotExist, Event.DoesNotExist):
         return Response(status=status.HTTP_404_NOT_FOUND)
     # create posts
-    success = False
+    posts = []
     for name in ['post1', 'post2']:
         if (name in request.data):
             post = request.data.get(name)
-            Post(from_addr=post['from_addr'],
+            p = Post(from_addr=post['from_addr'],
                     seats=post['seats'],
                     time=post['time'],
                     creator=user,
-                    event=event).save()
-            success = True
-    if success:
+                    event=event)
+            posts.append(p)
+            p.save()
+    # return the created ones
+    serializer = PostPublicSerializer(posts, many=True)
+    if serializer.is_valid():
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     else:
         return Response(status=status.HTTP_400_BAD_REQUEST)
