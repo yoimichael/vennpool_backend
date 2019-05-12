@@ -219,7 +219,7 @@ def create_ride(request):
         # user_token = Token.objects.get(key=request.META['Authorization'])
         # confirm user Id and token match
         # if (user_token.user.username != user.fb_id):
-        if (request.user.username != user.fb_id):
+        if (request.user.username != str(user.fb_id)):
             return Response(status=status.HTTP_404_NOT_FOUND)
     except (User.DoesNotExist):
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -291,7 +291,7 @@ def post_list(request, post_ids):
         # locate user
         user = User.objects.get(id=user_id)
         # verify the actor is the user id in data
-        if (request.user.username != user.fb_id):
+        if (request.user.username != str(user.fb_id)):
             return Response(status=status.HTTP_404_NOT_FOUND)
         # locate event
         event = Event.objects.get(id=event_id)
