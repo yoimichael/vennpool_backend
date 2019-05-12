@@ -275,7 +275,7 @@ def post_detail(request, id):
         try:
             user = User.objects.get(id = user_id)
         except (User.DoesNotExist):
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
         if user in post.users:
             post.users.remove(user)
