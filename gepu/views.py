@@ -93,7 +93,7 @@ def remove_auth_token(request):
         # if (user_token.user.username != user_auth.username):
         if (request.user.username != user_auth.username):
             return Response(status=status.HTTP_404_NOT_FOUND)
-    except (User_auth.DoesNotExist, Token.DoesNotExist):
+    except (User_auth.DoesNotExist):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     # delete sessions
@@ -143,7 +143,7 @@ def users_detail(request, id):
             # if (user_token.user.username != str(user.fb_id)):
             if (request.user.username != str(user.fb_id)):
                 return Response(status=status.HTTP_400_BAD_REQUEST)
-        except (User.DoesNotExist, Token.DoesNotExist):
+        except (User.DoesNotExist):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         # udpate user
@@ -177,7 +177,7 @@ def event_list(request):
     if (len(fb_eid_time) > 40):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
-    # TODO:: get info about user id = data.get('id')
+    # TODO:: get info about user id = data.get('id') and add user to event (for post protection: check if user belongs to the event)
 
     # get the query set of given events
     events_qs = Event.objects.filter(fb_eid__in=fb_eid_time.keys())
@@ -221,13 +221,13 @@ def create_ride(request):
         # if (user_token.user.username != user.fb_id):
         if (request.user.username != user.fb_id):
             return Response(status=status.HTTP_404_NOT_FOUND)
-    except (User.DoesNotExist, Token.DoesNotExist):
+    except (User.DoesNotExist):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     try:
         # locate event
         event = Event.objects.get(fb_eid=fb_eid)
-    except (Event.DoesNotExist, Token.DoesNotExist):
+    except (Event.DoesNotExist):
         # create a new event if it doesn't exist
         serializer = EventSerializer(data={'fb_eid':fb_eid})
         if not serializer.is_valid():
@@ -250,46 +250,6 @@ def create_ride(request):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     else:
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-# Get the type of request
-@api_view(['GET', 'POST'])
-def post_list(request, post_ids):
-    """
-    List posts, or create a new post.
-    """
-    # GET request
-    if request.method == 'GET':
-        data = []
-        nextPage = 1
-        previousPage = 1
-        posts = Post.objects.filter(id__in=post_ids.split(','))
-        page = request.GET.get('page', 1)
-        paginator = Paginator(posts, 10)
-        try:
-            data = paginator.page(page)
-        except PageNotAnInteger:
-            data = paginator.page(1)
-        except EmptyPage:
-            data = paginator.page(paginator.num_pages)
-
-        serializer = PostSerializer(data,context={'request': request} ,many=True)
-        if data.has_next():
-            nextPage = data.next_page_number()
-        if data.has_previous():
-            previousPage = data.previous_page_number()
-
-        return Response({'data': serializer.data , 'count': paginator.count, 'numpages' : paginator.num_pages, 'nextlink': '/api/post/?page=' + str(nextPage), 'prevlink': '/api/post/?page=' + str(previousPage)})
-
-    # POST request
-    elif request.method == 'POST':
-        # fetch the data
-        serializer = PostSerializer(data=request.data)
-        # save the data
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET', 'PUT', 'DELETE'])
@@ -318,6 +278,40 @@ def post_detail(request, id):
         post.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
         # POST request
+
+@api_view(['POST'])
+def post_list(request, post_ids):
+    """
+    create new post(s)
+    """
+    try:
+        user_id = request.data.get('uid');
+        event_id = request.data.get('eid');
+        # locate user
+        user = User.objects.get(id=user_id)
+        # verify the actor is the user id in data
+        if (request.user.username != user.fb_id):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        # locate event
+        event = Event.objects.get(id=event_id)
+    except (User.DoesNotExist, Event.DoesNotExist):
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    # create posts
+    success = False
+    for name in ['post1', 'post2']:
+        if (name in request.data):
+            post = request.data.get(name)
+            Post(from_addr=post['from_addr'],
+                    seats=post['seats'],
+                    time=post['time'],
+                    creator=user,
+                    event=event).save()
+            success = True
+    if success:
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    else:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
 
 # ----------------------HASH----------------------
 @api_view(['GET'])
