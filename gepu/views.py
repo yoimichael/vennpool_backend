@@ -292,7 +292,7 @@ def post_list(request, post_ids):
         user = User.objects.get(id=user_id)
         # verify the actor is the user id in data
         if (request.user.username != user.fb_id):
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
         # locate event
         event = Event.objects.get(id=event_id)
     except (User.DoesNotExist, Event.DoesNotExist):
