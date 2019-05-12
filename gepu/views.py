@@ -248,12 +248,12 @@ def create_ride(request):
     # save the data
     if serializer.is_valid():
         serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     else:
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET', 'PUT', 'DELETE'])
-def il(request, id):
+def post_detail(request, id):
     """
     Retrieve, update or delete a post by id/pk.
     """
@@ -268,11 +268,19 @@ def il(request, id):
         return Response(serializer.data)
 
     elif request.method == 'PUT':
-        serializer = PostSerializer(post, data=request.data,context={'request': request})
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        user_id = request.data.get('id')
+        try:
+            user = User.objects.get(id = user_id)
+        except (User.DoesNotExist):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        if user in post.users:
+            post.users.remove(user)
+        else:
+            post.users.add(user)
+
+        serializer = PostSerializer(post, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     elif request.method == 'DELETE':
         post.delete()
