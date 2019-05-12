@@ -198,59 +198,59 @@ def event_list(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 # ----------------------POST----------------------
-# Get the type of request
-@api_view(['POST'])
-def create_ride(request):
-    '''
-    gets the user's db id, fb_eid, and ride_data:
-    isRide (bool), third_Party (bool), seats (PositiveSmallIntegerField)
-    creates a ride for the event, if the event doesn't exist, create one
-    '''
-    # get request data
-    data = request.data
-    fb_eid = data.get('fb_eid')
-    id = data.get('id')
-    ride_data = data.ride_data
-
-    try:
-        # locate user
-        user = User.objects.get(id=id)
-        # get the token object that has user token and auth_user object
-        # user_token = Token.objects.get(key=request.META['Authorization'])
-        # confirm user Id and token match
-        # if (user_token.user.username != user.fb_id):
-        if (request.user.username != str(user.fb_id)):
-            return Response(status=status.HTTP_404_NOT_FOUND)
-    except (User.DoesNotExist):
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
-    try:
-        # locate event
-        event = Event.objects.get(fb_eid=fb_eid)
-    except (Event.DoesNotExist):
-        # create a new event if it doesn't exist
-        serializer = EventSerializer(data={'fb_eid':fb_eid})
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        event = serializer.save()
-        # make the creator a host
-        event.hosts.add(user)
-
-    # make user a member
-    if user not in event.members:
-        event.members.add(user)
-
-    # add ForeignKey to new post
-    ride_data['creator'] = users
-    ride_data['event'] = event
-    # create ride for user
-    serializer = PostSerializer(data=ride_data)
-    # save the data
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    else:
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+# # Get the type of request
+# @api_view(['POST'])
+# def create_ride(request):
+#     '''
+#     gets the user's db id, fb_eid, and ride_data:
+#     isRide (bool), third_Party (bool), seats (PositiveSmallIntegerField)
+#     creates a ride for the event, if the event doesn't exist, create one
+#     '''
+#     # get request data
+#     data = request.data
+#     fb_eid = data.get('fb_eid')
+#     id = data.get('id')
+#     ride_data = data.ride_data
+#
+#     try:
+#         # locate user
+#         user = User.objects.get(id=id)
+#         # get the token object that has user token and auth_user object
+#         # user_token = Token.objects.get(key=request.META['Authorization'])
+#         # confirm user Id and token match
+#         # if (user_token.user.username != user.fb_id):
+#         if (request.user.username != str(user.fb_id)):
+#             return Response(status=status.HTTP_404_NOT_FOUND)
+#     except (User.DoesNotExist):
+#         return Response(status=status.HTTP_404_NOT_FOUND)
+#
+#     try:
+#         # locate event
+#         event = Event.objects.get(fb_eid=fb_eid)
+#     except (Event.DoesNotExist):
+#         # create a new event if it doesn't exist
+#         serializer = EventSerializer(data={'fb_eid':fb_eid})
+#         if not serializer.is_valid():
+#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#         event = serializer.save()
+#         # make the creator a host
+#         event.hosts.add(user)
+#
+#     # make user a member
+#     if user not in event.members:
+#         event.members.add(user)
+#
+#     # add ForeignKey to new post
+#     ride_data['creator'] = users
+#     ride_data['event'] = event
+#     # create ride for user
+#     serializer = PostSerializer(data=ride_data)
+#     # save the data
+#     if serializer.is_valid():
+#         serializer.save()
+#         return Response(serializer.data, status=status.HTTP_200_OK)
+#     else:
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET', 'PUT', 'DELETE'])
 def post_detail(request, id):
@@ -278,6 +278,8 @@ def post_detail(request, id):
             post.users.remove(user)
         else:
             post.users.add(user)
+
+        post.save()
 
         serializer = PostSerializer(post, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
