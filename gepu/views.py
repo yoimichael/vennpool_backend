@@ -277,10 +277,12 @@ def post_detail(request, id):
         except (User.DoesNotExist):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        if user in post.users:
+        if user in post.users.all():
             post.users.remove(user)
+            post.seats += 1
         else:
             post.users.add(user)
+            post.seats -= 1
 
         post.save()
 

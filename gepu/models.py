@@ -38,7 +38,7 @@ class Post(models.Model):
     users = models.ManyToManyField('User',default=-1, related_name='posts', blank=True)
 
     def __str__(self):
-        return str(self.time)
+        return str(self.creator.name) + str(self.from_addr)
 
 class Event(models.Model):
     '''
