@@ -165,8 +165,8 @@ def users_detail(request, id):
 
 
 # ----------------------EVENT----------------------
-import logging
-logger = logging.getLogger("django")
+# import logging
+# logger = logging.getLogger("django")
 #logger.info("The value of var is %r", fb_eid_time)
 
 @api_view(['POST'])
@@ -182,14 +182,8 @@ def event_list(request):
 
     # TODO:: get info about user id = data.get('id') and add user to event (for post protection: check if user belongs to the event)
 
-    logger.info("Eid-time is %r",fb_eid_time)
-
     # get the query set of given events
     events_qs = Event.objects.filter(fb_eid__in=fb_eid_time.keys())
-
-    logger.info("keys are %r",fb_eid_time.keys())
-
-    logger.info("Lengths are %r %r " % (len(events_qs), len(fb_eid_time)))
 
     # if all events exist, repond with serialized info
     if len(events_qs) == len(fb_eid_time):
