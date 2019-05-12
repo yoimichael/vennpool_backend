@@ -20,7 +20,7 @@ from django.core import serializers
 # user Django paginator to divide many data into pages
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .models import User, Event, Post, Hash
-from .serializers import UserSerializer, EventSerializer, PostSerializer, HashSerializer
+from .serializers import UserSerializer, EventSerializer, PostSerializer, HashSerializer, PostPublicSerializer
 from django.utils import timezone
 
 # for random hash_code
@@ -253,7 +253,7 @@ def create_ride(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET', 'PUT', 'DELETE'])
-def post_detail(request, id):
+def il(request, id):
     """
     Retrieve, update or delete a post by id/pk.
     """
@@ -280,7 +280,7 @@ def post_detail(request, id):
         # POST request
 
 @api_view(['POST'])
-def post_list(request, post_ids):
+def post_list(request):
     """
     create new post(s)
     and return them
@@ -292,7 +292,7 @@ def post_list(request, post_ids):
         user = User.objects.get(id=user_id)
         # verify the actor is the user id in data
         if (request.user.username != str(user.fb_id)):
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
         # locate event
         event = Event.objects.get(id=event_id)
     except (User.DoesNotExist, Event.DoesNotExist):
@@ -311,10 +311,10 @@ def post_list(request, post_ids):
             p.save()
     # return the created ones
     serializer = PostPublicSerializer(posts, many=True)
-    if serializer.is_valid():
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    else:
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+    # if serializer.is_valid():
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+    # else:
+        # return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 # ----------------------HASH----------------------

@@ -31,7 +31,7 @@ urlpatterns = [
     url(r'^api/logout/$', remove_auth_token),
     url(r'^api/user/$', create_user),
     url(r'^api/user/(?P<id>[0-9]+)$', users_detail),
-    url(r'^api/post/(?P<post_ids>[0-9,]*)$', post_list),
+    url(r'^api/post/$', post_list),
     url(r'^api/post/(?P<id>[0-9]+)$', post_detail),
     url(r'^api/event/$', event_list),
     url(r'^api/hash/code/(?P<hash_code>[.]{4})$', get_event),
