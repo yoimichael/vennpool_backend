@@ -256,7 +256,7 @@ def create_ride(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET', 'PUT', 'DELETE'])
-def post_detail(request, id):
+def il(request, id):
     """
     Retrieve, update or delete a post by id/pk.
     """
@@ -316,10 +316,7 @@ def post_list(request):
             p.save()
     # return the created ones
     serializer = PostPublicSerializer(posts, many=True)
-    #if serializer.is_valid():
     return Response(serializer.data, status=status.HTTP_201_CREATED)
-    #else:
-     #   return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 # ----------------------HASH----------------------

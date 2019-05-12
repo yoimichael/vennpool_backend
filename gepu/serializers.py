@@ -9,21 +9,26 @@ class UserSerializer(ModelSerializer):
         model = User
         fields = ('id','car_info','phone', 'fb_id','messenger_id','fbtoken','name', 'email','photo')
 
-class UserPublicSerializer(ModelSerializer):
+class DriverUserSerializer(ModelSerializer):
     class Meta:
         model = User
         fields = ('id','car_info','fb_id','name','phone')
 
+class RiderPublicSerializer(ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id','fb_id','name','phone')
+
 class PostSerializer(ModelSerializer):
     # can access phone number
-    users = UserPublicSerializer(read_only=True, many=True)
+    users = RiderPublicSerializer(read_only=True, many=True)
     class Meta:
         model = Post
         fields = ('id', 'from_addr','seats','creator','time','users')
     # not using ,'isRide', 'third_Party', to_addr for now
 
 class PostPublicSerializer(ModelSerializer):
-    creator = UserPublicSerializer(read_only=True)
+    creator = DriverUserSerializer(read_only=True)
     class Meta:
         model = Post
         fields = ('id', 'from_addr','seats','creator','time')
