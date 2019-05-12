@@ -20,11 +20,14 @@ from django.core import serializers
 # user Django paginator to divide many data into pages
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .models import User, Event, Post, Hash
-from .serializers import UserSerializer, EventSerializer, PostSerializer, HashSerializer
+from .serializers import UserSerializer, EventSerializer, PostSerializer, HashSerializer, PostPublicSerializer
 from django.utils import timezone
 
 # for random hash_code
 from random import randint
+
+import logging
+logger = logging.getLogger("django")
 
 # ----------------------USER----------------------
 @api_view(['POST'])
@@ -219,7 +222,7 @@ def create_ride(request):
         # user_token = Token.objects.get(key=request.META['Authorization'])
         # confirm user Id and token match
         # if (user_token.user.username != user.fb_id):
-        if (request.user.username != user.fb_id):
+        if (request.user.username != str(user.fb_id)):
             return Response(status=status.HTTP_404_NOT_FOUND)
     except (User.DoesNotExist):
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -280,7 +283,7 @@ def post_detail(request, id):
         # POST request
 
 @api_view(['POST'])
-def post_list(request, post_ids):
+def post_list(request):
     """
     create new post(s)
     and return them
@@ -291,7 +294,7 @@ def post_list(request, post_ids):
         # locate user
         user = User.objects.get(id=user_id)
         # verify the actor is the user id in data
-        if (request.user.username != user.fb_id):
+        if (request.user.username != str(user.fb_id)):
             return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
         # locate event
         event = Event.objects.get(id=event_id)
@@ -299,9 +302,11 @@ def post_list(request, post_ids):
         return Response(status=status.HTTP_404_NOT_FOUND)
     # create posts
     posts = []
+    logger.info("request.data is %r", request.data)
     for name in ['post1', 'post2']:
         if (name in request.data):
             post = request.data.get(name)
+            logger.info("post is %r", post)
             p = Post(from_addr=post['from_addr'],
                     seats=post['seats'],
                     time=post['time'],
@@ -311,10 +316,10 @@ def post_list(request, post_ids):
             p.save()
     # return the created ones
     serializer = PostPublicSerializer(posts, many=True)
-    if serializer.is_valid():
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    else:
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+    #if serializer.is_valid():
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+    #else:
+     #   return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 # ----------------------HASH----------------------
