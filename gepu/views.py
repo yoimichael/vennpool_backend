@@ -162,8 +162,8 @@ def users_detail(request, id):
 
 
 # ----------------------EVENT----------------------
-# import logging
-# logger = logging.getLogger("django")
+import logging
+logger = logging.getLogger("django")
 #logger.info("The value of var is %r", fb_eid_time)
 
 @api_view(['POST'])
@@ -179,12 +179,19 @@ def event_list(request):
 
     # TODO:: get info about user id = data.get('id') and add user to event (for post protection: check if user belongs to the event)
 
+    logger.info("Eid-time is %r",fb_eid_time)
+
     # get the query set of given events
     events_qs = Event.objects.filter(fb_eid__in=fb_eid_time.keys())
+
+    logger.info("keys are %r",fb_eid_time.keys())
+
+    logger.info("Lengths are %r %r " % (len(events_qs), len(fb_eid_time)))
 
     # if all events exist, repond with serialized info
     if len(events_qs) == len(fb_eid_time):
         serializer = EventSerializer(events_qs,many=True)
+        logger.info(events_qs.objects.all())
     else:
         # if some events don't exist in db, create them
         event_list = []
@@ -193,6 +200,7 @@ def event_list(request):
                             fb_eid = fb_eid,
                             time=fb_eid_time[fb_eid])
             event_list.append(new_event)
+        logger.info(event_list)
         serializer = EventSerializer(event_list,many=True)
 
     return Response(serializer.data, status=status.HTTP_200_OK)
@@ -274,10 +282,12 @@ def post_detail(request, id):
         except (User.DoesNotExist):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        if user in post.users:
+        if user in post.users.all():
             post.users.remove(user)
+            post.seats += 1
         else:
             post.users.add(user)
+            post.seats -= 1
 
         post.save()
 
