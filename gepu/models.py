@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from django.db import models
 from uuid import uuid4
 from django.utils import timezone
@@ -38,8 +39,7 @@ class Post(models.Model):
     users = models.ManyToManyField('User',default=-1, related_name='posts', blank=True)
 
     def __str__(self):
-        return str(self.creator.name) + str(self.from_addr)
-
+        return (unicode(self.creator.name) + unicode(self.from_addr)).encode('ascii', errors='replace')
 class Event(models.Model):
     '''
     backward relations: posts, hash
