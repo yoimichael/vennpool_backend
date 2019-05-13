@@ -185,7 +185,6 @@ def event_list(request):
     # if all events exist, repond with serialized info
     if len(events_qs) == len(fb_eid_time):
         serializer = EventSerializer(events_qs,many=True)
-        logger.info(events_qs.objects.all())
     else:
         # if some events don't exist in db, create them
         event_list = []
@@ -194,7 +193,6 @@ def event_list(request):
                             fb_eid = fb_eid,
                             time=fb_eid_time[fb_eid])
             event_list.append(new_event[0])
-        logger.info(event_list)
         serializer = EventSerializer(event_list,many=True)
 
     return Response(serializer.data, status=status.HTTP_200_OK)
