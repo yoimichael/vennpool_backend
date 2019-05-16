@@ -24,14 +24,16 @@ class PostSerializer(ModelSerializer):
     users = RiderPublicSerializer(read_only=True, many=True)
     class Meta:
         model = Post
-        fields = ('id', 'from_addr','seats','creator','time','users')
+        fields = ('id', 'event', 'from_addr','seats','creator','time','users')
     # not using ,'isRide', 'third_Party', to_addr for now
 
 class PostPublicSerializer(ModelSerializer):
     creator = DriverUserSerializer(read_only=True)
     class Meta:
         model = Post
-        fields = ('id', 'from_addr','seats','creator','time')
+        fields = ('id', 'event', 'from_addr','seats','creator','time','users')
+
+    # users will only be a list of ids
 
 # serializers used for RESTful responses
 class EventSerializer(ModelSerializer):
