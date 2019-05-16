@@ -22,6 +22,7 @@ class RiderPublicSerializer(ModelSerializer):
 class PostSerializer(ModelSerializer):
     # can access phone number
     users = RiderPublicSerializer(read_only=True, many=True)
+    creator = DriverUserSerializer(read_only=True)
     class Meta:
         model = Post
         fields = ('id', 'event', 'from_addr','seats','creator','time','users')
